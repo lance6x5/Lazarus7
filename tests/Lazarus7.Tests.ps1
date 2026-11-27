@@ -17,6 +17,19 @@ Describe 'Banner' {
     }
 }
 
+Describe 'Versioning' {
+    $repoRoot = Split-Path $PSScriptRoot
+    It 'has a CHANGELOG entry for the current version at the top' {
+        $md = [IO.File]::ReadAllText((Join-Path $repoRoot 'CHANGELOG.md'))
+        $top = [regex]::Match($md, '(?m)^## \[([^\]]+)\]').Groups[1].Value
+        $top | Should Be (Get-Lazarus7Version)
+    }
+    It 'shows the same version as the fallback on the website' {
+        $html = [IO.File]::ReadAllText((Join-Path $repoRoot 'docs\index.html'))
+        $html -match ('data-version="' + [regex]::Escape((Get-Lazarus7Version)) + '"') | Should Be $true
+    }
+}
+
 Describe 'ConvertTo-L7TabletDevice' {
     It 'recognises a Rockchip loader' {
         $d = ConvertTo-L7TabletDevice -InstanceId 'USB\VID_2207&PID_300A\5&1' -FriendlyName 'Unknown' -Status 'Error'

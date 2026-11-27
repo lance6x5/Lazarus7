@@ -27,7 +27,7 @@ Rockchip loader mode.
   | |___   / ___ \   / /_   / ___ \  |  _ <  | |_| |  ___) |   / /
   |_____| /_/   \_\ /____| /_/   \_\ |_| \_\  \___/  |____/   /_/
 
-  Raise your 7-inch HP tablet from the dead.   v1.1.0
+  Raise your 7-inch HP tablet from the dead.   v1.2.0
 ```
 
 ## 🌐 Run from the web
@@ -107,8 +107,11 @@ tests/                Pester tests:  Invoke-Pester .\tests
 .github/workflows/    release.yml: tag v* -> tests -> Lazarus7.zip + .sha256 release
 ```
 
-Releasing: `git tag v1.2.0 && git push --tags`. The workflow runs the tests, then publishes the zip that the web
-launcher picks up.
+Releasing: bump `Lazarus7Version` in `src/Lazarus7.Ui.psm1` and the site's `data-version`. Then add a
+`## [x.y.z] - date` section to [CHANGELOG.md](CHANGELOG.md), and run `git tag vx.y.z && git push --tags`. The workflow
+refuses a tag that doesn't match the code. It runs the tests and publishes the zip that the web launcher picks up, with
+that changelog section as the release notes. The website shows the latest version, its release date, when the
+site was last updated, and the full changelog.
 
 ## Contributing
 

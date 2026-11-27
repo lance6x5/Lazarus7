@@ -84,6 +84,27 @@
   th { color: var(--muted); font-weight: 600; }
   .y { color: var(--ok); } .m { color: var(--orange); } .x { color: var(--red); }
 
+  .ver { font-size: 12px; color: var(--gold); border: 1px solid var(--line); border-radius: 99px; padding: 1px 8px;
+         text-decoration: none; white-space: nowrap; }
+  .relinfo { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; }
+  .chip { font-size: 13px; color: var(--muted); background: var(--panel); border: 1px solid var(--line);
+          border-radius: 99px; padding: 4px 12px; text-decoration: none; }
+  .chip b { color: var(--text); font-weight: 600; }
+  a.chip:hover { border-color: var(--orange); }
+
+  .cl-ver { border-top: 1px solid var(--line); padding: 12px 0; }
+  .cl-ver:first-child { border-top: 0; padding-top: 0; }
+  .cl-ver summary { cursor: pointer; list-style: none; display: flex; gap: 10px; align-items: baseline; }
+  .cl-ver summary::-webkit-details-marker { display: none; }
+  .cl-ver summary::before { content: '\25B8'; color: var(--orange); }
+  .cl-ver[open] summary::before { content: '\25BE'; }
+  .cl-ver .v { font-size: 18px; font-weight: 700; color: var(--gold); }
+  .cl-ver .d { color: var(--dim); font-size: 14px; }
+  .cl-ver .latest { font-size: 12px; color: #1a0b03; background: var(--fire); border-radius: 99px; padding: 1px 8px; font-weight: 700; }
+  .cl-ver h4 { margin: 12px 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .cl-ver ul { margin: 0; padding-left: 22px; } .cl-ver li { margin: 3px 0; }
+  .cl-ver code { color: var(--gold); font-size: 14px; }
+
   footer { padding: 30px 0 50px; color: var(--dim); font-size: 14px; border-top: 1px solid var(--line); text-align: center; }
 </style>
 </head>
@@ -91,11 +112,13 @@
 
 <nav><div class="wrap">
   <span class="brand">LAZARUS7</span>
+  <a class="ver" id="navVer" href="#changelog">v1.2.0</a>
   <a href="#launch">Launch</a>
   <a href="#diagnose">Diagnose</a>
   <a href="#identify">Identify</a>
   <a href="#firstaid">First aid</a>
   <a href="#os">Other OSes</a>
+  <a href="#changelog">Changelog</a>
   <a href="https://github.com/lance6x5/Lazarus7">GitHub</a>
 </div></nav>
 
@@ -103,6 +126,12 @@
   <img src="logo.svg" alt="Lazarus7 - Raise your 7-inch HP tablet from the dead.">
   <p class="lead">Recovery and OS deployment for the <b>HP Stream 7</b> (label <code>TSW 7H</code>) and the
     <b>HP Slate 7</b> family. Diagnose right here in your browser, then launch the full tool with one line.</p>
+  <!-- Static values are the fallback; the script below refreshes them from the GitHub API. -->
+  <div class="relinfo" id="relinfo" data-version="1.2.0">
+    <a class="chip" id="chipVer" href="https://github.com/lance6x5/Lazarus7/releases/latest">Latest release <b>v1.2.0</b></a>
+    <span class="chip" id="chipRel">Released <b>2026-11-27</b></span>
+    <a class="chip" id="chipSite" href="https://github.com/lance6x5/Lazarus7/commits/main/docs">Site updated <b>-</b></a>
+  </div>
 </div></header>
 
 <main class="wrap">
@@ -181,6 +210,13 @@
   </table>
   </div>
   <p class="note">Full manual walkthrough: <a href="https://github.com/lance6x5/Lazarus7/blob/main/docs/GUIDE.md">the field guide</a>.</p>
+</section>
+
+<section id="changelog">
+  <h2><span class="n">06</span>Changelog</h2>
+  <p class="sub">What changed in each release. Source:
+    <a href="https://github.com/lance6x5/Lazarus7/blob/main/CHANGELOG.md">CHANGELOG.md</a>.</p>
+  <div class="card" id="clog"><span class="note">Loading changelog...</span></div>
 </section>
 
 </main>
@@ -355,6 +391,107 @@ if (!('usb' in navigator)) {
     });
   });
 }
+
+// ---- version / timestamps / changelog ----------------------------------
+var REPO = 'lance6x5/Lazarus7';
+function fmtDate(iso, withTime) {
+  var d = new Date(iso);
+  if (isNaN(d)) return iso;
+  var o = { year: 'numeric', month: 'short', day: 'numeric' };
+  if (withTime) { o.hour = '2-digit'; o.minute = '2-digit'; o.timeZoneName = 'short'; }
+  return d.toLocaleString(undefined, o);
+}
+function setChip(id, label, value, href) {
+  var c = document.getElementById(id);
+  c.textContent = label + ' ';
+  c.appendChild(el('b', { text: value }));
+  if (href) c.setAttribute('href', href);
+}
+function getJson(url) {
+  return fetch(url, { headers: { Accept: 'application/vnd.github+json' } })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+}
+
+// Fallback for "site updated": the Last-Modified time GitHub Pages serves for this page.
+setChip('chipSite', 'Site updated', fmtDate(document.lastModified, true));
+
+getJson('https://api.github.com/repos/' + REPO + '/releases/latest').then(function (rel) {
+  setChip('chipVer', 'Latest release', rel.tag_name, rel.html_url);
+  setChip('chipRel', 'Released', fmtDate(rel.published_at, false));
+  document.getElementById('navVer').textContent = rel.tag_name;
+}).catch(function () { /* keep the static fallback */ });
+
+getJson('https://api.github.com/repos/' + REPO + '/commits?path=docs&per_page=1').then(function (list) {
+  if (!list.length) return;
+  var c = list[0];
+  setChip('chipSite', 'Site updated', fmtDate(c.commit.committer.date, true) + ' · ' + c.sha.slice(0, 7),
+          'https://github.com/' + REPO + '/commit/' + c.sha);
+}).catch(function () { /* keep the Last-Modified fallback */ });
+
+// Inline markdown -> DOM nodes: `code`, **bold**, [text](https://...). No innerHTML.
+function inline(text) {
+  var frag = document.createDocumentFragment();
+  var re = /`([^`]+)`|\*\*([^*]+)\*\*|\[([^\]]+)\]\((https:\/\/[^)\s]+)\)/g;
+  var last = 0, m;
+  while ((m = re.exec(text))) {
+    if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+    if (m[1]) frag.appendChild(el('code', { text: m[1] }));
+    else if (m[2]) frag.appendChild(el('b', { text: m[2] }));
+    else frag.appendChild(el('a', { href: m[4], text: m[3] }));
+    last = re.lastIndex;
+  }
+  if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+  return frag;
+}
+
+// Parses Keep-a-Changelog markdown into [{ version, date, groups: [{ name, items }] }].
+function parseChangelog(md) {
+  var versions = [], cur = null, group = null, item = null;
+  md.split(/\r?\n/).forEach(function (line) {
+    var v = line.match(/^## \[([^\]]+)\](?:\s*-\s*(\S+))?/);
+    if (v) { cur = { version: v[1], date: v[2] || '', groups: [] }; versions.push(cur); group = item = null; return; }
+    if (!cur || /^\[[^\]]+\]:\s/.test(line)) return;
+    var g = line.match(/^### (.+)/);
+    if (g) { group = { name: g[1].trim(), items: [] }; cur.groups.push(group); item = null; return; }
+    var li = line.match(/^- (.*)/);
+    if (li && group) { item = li[1]; group.items.push(item); return; }
+    if (/^\s{2,}\S/.test(line) && group && item !== null) {
+      group.items[group.items.length - 1] += ' ' + line.trim();
+    }
+  });
+  return versions;
+}
+
+function renderChangelog(md) {
+  var box = document.getElementById('clog');
+  var versions = parseChangelog(md);
+  box.innerHTML = '';
+  if (!versions.length) { box.appendChild(el('span', { 'class': 'note', text: 'No entries yet.' })); return versions; }
+  versions.forEach(function (v, i) {
+    var summary = el('summary', {}, [el('span', { 'class': 'v', text: 'v' + v.version }), el('span', { 'class': 'd', text: v.date })]);
+    if (i === 0) summary.appendChild(el('span', { 'class': 'latest', text: 'latest' }));
+    var det = el('details', { 'class': 'cl-ver' }, [summary]);
+    if (i === 0) det.open = true;
+    v.groups.forEach(function (g) {
+      det.appendChild(el('h4', { text: g.name }));
+      det.appendChild(el('ul', {}, g.items.map(function (t) { var li = el('li'); li.appendChild(inline(t)); return li; })));
+    });
+    box.appendChild(det);
+  });
+  return versions;
+}
+
+fetch('https://raw.githubusercontent.com/' + REPO + '/main/CHANGELOG.md')
+  .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+  .then(renderChangelog)
+  .catch(function () {
+    var box = document.getElementById('clog');
+    box.innerHTML = '';
+    box.appendChild(el('span', { 'class': 'note' }, [document.createTextNode('Could not load the changelog. '),
+      el('a', { href: 'https://github.com/' + REPO + '/blob/main/CHANGELOG.md', text: 'Read it on GitHub' })]));
+  });
+
+window.L7 = { parseChangelog: parseChangelog, renderChangelog: renderChangelog };
 </script>
 </body>
 </html>
