@@ -27,10 +27,31 @@ Rockchip loader mode.
   | |___   / ___ \   / /_   / ___ \  |  _ <  | |_| |  ___) |   / /
   |_____| /_/   \_\ /____| /_/   \_\ |_| \_\  \___/  |____/   /_/
 
-  Raise your 7-inch HP tablet from the dead.   v1.0.0
+  Raise your 7-inch HP tablet from the dead.   v1.1.0
 ```
 
-## Quick start
+## 🌐 Run from the web
+
+**Website: <https://lance6x5.github.io/Lazarus7/>**. The Diagnose wizard, first aid and OS table run right in
+the browser, and *Identify my tablet* uses WebUSB in Chrome or Edge.
+
+To launch the full tool, paste one line into **PowerShell**. It downloads the latest release, verifies the SHA256,
+and starts the wizard:
+
+```powershell
+irm https://lance6x5.github.io/Lazarus7/run.ps1 | iex
+```
+
+Dry run (nothing is erased or flashed):
+
+```powershell
+& ([scriptblock]::Create((irm https://lance6x5.github.io/Lazarus7/run.ps1))) -DryRun
+```
+
+The launcher installs to `%LOCALAPPDATA%\Lazarus7\<version>`. Read [`docs/run.ps1`](docs/run.ps1) before piping it
+if you like, since it's short.
+
+## Quick start (from a clone)
 
 1. Download or clone this repo onto a Windows 10/11 PC.
 2. Double-click **`Lazarus7.cmd`** and accept the admin prompt. Admin is needed only to write USB sticks.
@@ -81,9 +102,13 @@ Lazarus7.cmd          double-click launcher (self-elevates)
 Lazarus7.ps1          main wizard
 src/                  modules: Ui, Detect, Triage, Download, Usb, Android
 payload/              files copied to the USB for use on the tablet
-docs/                 field guide + logo
+docs/                 GitHub Pages site (index.html, run.ps1 launcher), field guide, logo
 tests/                Pester tests:  Invoke-Pester .\tests
+.github/workflows/    release.yml: tag v* -> tests -> Lazarus7.zip + .sha256 release
 ```
+
+Releasing: `git tag v1.2.0 && git push --tags`. The workflow runs the tests, then publishes the zip that the web
+launcher picks up.
 
 ## Contributing
 

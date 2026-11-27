@@ -1,0 +1,360 @@
+<!doctype html>
+<!-- Lazarus7 - Copyright (c) 2026 lance6x5 - MIT License -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lazarus7 - raise your 7-inch HP tablet from the dead</title>
+<meta name="description" content="Recovery and OS deployment wizard for the HP Stream 7 (TSW 7H) and HP Slate 7 tablets. Diagnose in the browser, launch the full tool with one line.">
+<link rel="icon" href="logo.svg">
+<style>
+  :root {
+    --bg: #0d0f13; --panel: #161920; --panel2: #1d212a; --line: #2a2f3a;
+    --text: #e5e7eb; --muted: #9ca3af; --dim: #6b7280;
+    --ember: #7a0b0b; --red: #ef4444; --orange: #f59e0b; --gold: #fde68a; --ok: #34d399;
+    --fire: linear-gradient(90deg, var(--orange), var(--red));
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.55 "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; }
+  a { color: var(--orange); }
+  code, pre, .mono { font-family: Consolas, "Cascadia Mono", Menlo, monospace; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+
+  nav { position: sticky; top: 0; z-index: 5; background: rgba(13,15,19,.92); backdrop-filter: blur(6px);
+        border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; gap: 18px; align-items: center; height: 54px; overflow-x: auto; }
+  nav .brand { font-weight: 800; letter-spacing: 1px; background: var(--fire); -webkit-background-clip: text;
+               background-clip: text; color: transparent; margin-right: auto; white-space: nowrap; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 14px; white-space: nowrap; }
+  nav a:hover { color: var(--text); }
+
+  header { padding: 56px 0 28px; text-align: center;
+           background: radial-gradient(ellipse at 50% 120%, rgba(226,59,26,.18), transparent 60%); }
+  header img { width: min(640px, 100%); height: auto; }
+  header p.lead { color: var(--muted); font-size: 18px; margin: 18px auto 0; max-width: 640px; }
+
+  section { padding: 34px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: 24px; margin: 0 0 6px; }
+  h2 .n { color: var(--orange); margin-right: 8px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+  .cmd { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+         background: #0a0c10; margin: 10px 0; }
+  .cmd code { flex: 1; padding: 12px 14px; color: var(--gold); overflow-x: auto; white-space: nowrap; font-size: 14px; }
+  .cmd button { border: 0; border-left: 1px solid var(--line); background: var(--panel2); color: var(--text);
+                padding: 0 16px; cursor: pointer; font: inherit; font-size: 14px; }
+  .cmd button:hover { background: var(--line); }
+  .note { color: var(--dim); font-size: 14px; }
+
+  .btn { display: inline-block; border: 1px solid var(--line); background: var(--panel2); color: var(--text);
+         border-radius: 10px; padding: 10px 16px; cursor: pointer; font: inherit; text-decoration: none; }
+  .btn:hover { border-color: var(--orange); }
+  .btn.primary { background: var(--fire); border: 0; color: #1a0b03; font-weight: 700; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .steps { display: flex; gap: 8px; margin-bottom: 16px; }
+  .steps span { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+  .steps span.on { background: var(--fire); }
+  .choices { display: grid; gap: 10px; }
+  .choice { text-align: left; width: 100%; border: 1px solid var(--line); background: var(--panel2); color: var(--text);
+            border-radius: 10px; padding: 12px 14px; cursor: pointer; font: inherit; }
+  .choice:hover, .choice:focus-visible { border-color: var(--orange); outline: none; }
+  .choice small { display: block; color: var(--muted); }
+  .rec h3 { margin: 0 0 10px; color: var(--gold); }
+  .rec ol { margin: 0 0 14px; padding-left: 22px; }
+  .rec li { margin: 4px 0; }
+  .pill { display: inline-block; font-size: 13px; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line);
+          color: var(--muted); margin-bottom: 12px; }
+  .tool { background: #0a0c10; border-left: 3px solid var(--orange); padding: 10px 12px; border-radius: 6px;
+          color: var(--muted); font-size: 15px; }
+
+  .usbres { margin-top: 14px; }
+  .usbres .hit { border-left: 3px solid var(--ok); }
+  kbd { background: var(--panel2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px;
+        padding: 1px 6px; font-size: 13px; font-family: inherit; }
+  dl { margin: 0; } dt { font-weight: 700; margin-top: 10px; } dd { margin: 2px 0 0; color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .y { color: var(--ok); } .m { color: var(--orange); } .x { color: var(--red); }
+
+  footer { padding: 30px 0 50px; color: var(--dim); font-size: 14px; border-top: 1px solid var(--line); text-align: center; }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <span class="brand">LAZARUS7</span>
+  <a href="#launch">Launch</a>
+  <a href="#diagnose">Diagnose</a>
+  <a href="#identify">Identify</a>
+  <a href="#firstaid">First aid</a>
+  <a href="#os">Other OSes</a>
+  <a href="https://github.com/lance6x5/Lazarus7">GitHub</a>
+</div></nav>
+
+<header><div class="wrap">
+  <img src="logo.svg" alt="Lazarus7 - Raise your 7-inch HP tablet from the dead.">
+  <p class="lead">Recovery and OS deployment for the <b>HP Stream 7</b> (label <code>TSW 7H</code>) and the
+    <b>HP Slate 7</b> family. Diagnose right here in your browser, then launch the full tool with one line.</p>
+</div></header>
+
+<main class="wrap">
+
+<section id="launch">
+  <h2><span class="n">01</span>Launch the full tool (Windows)</h2>
+  <p class="sub">Building USB sticks and flashing need direct access to your PC, which a web page can't have.
+    Paste this into <b>PowerShell</b>. It fetches the latest release from GitHub, verifies its SHA256, and starts the wizard.</p>
+  <div class="cmd"><code id="cmdRun">irm https://lance6x5.github.io/Lazarus7/run.ps1 | iex</code><button data-copy="cmdRun">Copy</button></div>
+  <p class="note">Want to look around first? Dry run: nothing is erased or flashed.</p>
+  <div class="cmd"><code id="cmdDry">&amp; ([scriptblock]::Create((irm https://lance6x5.github.io/Lazarus7/run.ps1))) -DryRun</code><button data-copy="cmdDry">Copy</button></div>
+  <p class="note">Prefer not to pipe scripts from the web? <a href="https://github.com/lance6x5/Lazarus7/releases/latest">Download the ZIP</a>,
+    read <a href="run.ps1">run.ps1</a>, or clone the repo and double-click <code>Lazarus7.cmd</code>.</p>
+</section>
+
+<section id="diagnose">
+  <h2><span class="n">02</span>Diagnose</h2>
+  <p class="sub">Two questions, then a concrete next step. This runs entirely in your browser.</p>
+  <div class="card" id="wizard" aria-live="polite"></div>
+</section>
+
+<section id="identify">
+  <h2><span class="n">03</span>Identify my tablet</h2>
+  <p class="sub">Plug the tablet into this computer with a <b>data</b> cable, then scan. Needs Chrome or Edge (WebUSB).
+    Detection only: nothing is sent to the device.</p>
+  <div class="card">
+    <button class="btn primary" id="scan">Scan USB for a tablet</button>
+    <div class="usbres" id="usbres"></div>
+    <p class="note" style="margin-bottom:0">An <b>HP Stream 7</b> never shows up on a PC (its port is charge + OTG host only), so
+      no result is normal for it. For Android Slates, try the key combos below while plugging in.</p>
+  </div>
+</section>
+
+<section id="firstaid">
+  <h2><span class="n">04</span>First aid</h2>
+  <p class="sub">No tools needed. Try these before anything else.</p>
+  <div class="grid">
+    <div class="card"><dl>
+      <dt>Dead battery (most common "brick")</dt>
+      <dd>2 A wall charger, short cable, <b>4+ hours</b>. A drained Bay Trail tablet shows nothing for the first hour.</dd>
+      <dt>Hard reset</dt>
+      <dd>Hold <kbd>Power</kbd> 15-30 s, release, then hold <kbd>Power</kbd> 5 s.</dd>
+    </dl></div>
+    <div class="card"><dl>
+      <dt>Stream 7 startup menu</dt>
+      <dd>Tablet off: hold <kbd>Vol-</kbd>, press <kbd>Power</kbd> until the HP logo, release Power.</dd>
+      <dd><kbd>F2</kbd> diagnostics &middot; <kbd>F9</kbd> boot USB &middot; <kbd>F10</kbd> BIOS &middot; <kbd>F11</kbd> factory recovery</dd>
+    </dl></div>
+    <div class="card"><dl>
+      <dt>Android Slate 7</dt>
+      <dd>Recovery: <kbd>Power</kbd> + <kbd>Vol+</kbd> (on the 2800 sometimes also <kbd>Vol-</kbd>).</dd>
+      <dt>Rockchip loader (Slate 7 2800)</dt>
+      <dd>Tablet off, hold <kbd>Vol+</kbd> while plugging USB into the PC.</dd>
+    </dl></div>
+    <div class="card"><dl>
+      <dt>Shopping list for USB work</dt>
+      <dd>micro-USB OTG adapter, a <b>powered</b> USB hub, USB keyboard, an 8 GB+ USB stick.</dd>
+    </dl></div>
+  </div>
+</section>
+
+<section id="os">
+  <h2><span class="n">05</span>Other OSes for the Stream 7</h2>
+  <p class="sub">Its Atom Z3735G is 64-bit, but the firmware is <b>32-bit UEFI only</b>: install media must contain
+    <code>EFI\BOOT\BOOTIA32.EFI</code>. Lazarus7 checks this for you.</p>
+  <div class="card" style="overflow-x:auto">
+  <table>
+    <tr><th>OS</th><th>Verdict</th><th>Notes</th></tr>
+    <tr><td><b>Debian 12 i386</b></td><td class="y">Recommended</td><td>Lazarus7's default. Download is SHA256-verified, with tablet fixes applied after install. Security support to mid-2028.</td></tr>
+    <tr><td>Debian 13 amd64</td><td class="x">Not out of the box</td><td>No i386 installer, and the amd64 netinst has only BOOTX64.EFI.</td></tr>
+    <tr><td>Lubuntu / Xubuntu</td><td class="m">With surgery</td><td>Add GRUB ia32 by hand.</td></tr>
+    <tr><td>Alpine / Arch</td><td class="m">DIY</td><td><code>grub-install --target=i386-efi</code>. Light on 1 GB RAM.</td></tr>
+    <tr><td>Android-x86 / Bliss OS</td><td class="m">Experimental</td><td>Needs ia32 GRUB. Touch and rotation are hit-and-miss.</td></tr>
+    <tr><td>Windows 10 x86</td><td class="m">Works, unsupported</td><td>Out of support. Slow on 1 GB RAM / 32 GB eMMC.</td></tr>
+    <tr><td>Windows 11, ChromeOS Flex, Fedora</td><td class="x">No</td><td>No 32-bit UEFI support.</td></tr>
+  </table>
+  </div>
+  <p class="note">Full manual walkthrough: <a href="https://github.com/lance6x5/Lazarus7/blob/main/docs/GUIDE.md">the field guide</a>.</p>
+</section>
+
+</main>
+
+<footer><div class="wrap">
+  Lazarus7 &copy; 2026 lance6x5 &middot; <a href="https://github.com/lance6x5/Lazarus7/blob/main/LICENSE">MIT License</a><br>
+  Independent project, not affiliated with or endorsed by HP Inc. "HP", "Stream" and "Slate" are trademarks of HP Inc.
+</div></footer>
+
+<script>
+// ---- copy buttons --------------------------------------------------------
+document.querySelectorAll('[data-copy]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var text = document.getElementById(b.dataset.copy).textContent;
+    navigator.clipboard.writeText(text).then(function () {
+      b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500);
+    });
+  });
+});
+
+// ---- diagnose wizard (mirrors src/Lazarus7.Triage.psm1) -----------------
+var TOOL = {
+  detect:   'Lazarus7 > Identify my tablet  (or the scanner below)',
+  firstaid: 'Lazarus7 > First aid  (or the cards below)',
+  winusb:   'Lazarus7 > Build Windows recovery USB',
+  linux:    'Lazarus7 > Deploy Linux',
+  android:  'Lazarus7 > Flash / recover Android Slate 7'
+};
+var ANCHOR = { detect: '#identify', firstaid: '#firstaid' };
+
+var SYMPTOMS = [
+  ['dead',      'Completely dead, no charging icon'],
+  ['logo',      'Shows HP logo, then black screen / boot loop'],
+  ['password',  'Asks for a password before the logo'],
+  ['bitlocker', 'Blue BitLocker recovery-key screen'],
+  ['noboot',    '"No bootable device" / black screen'],
+  ['boots',     'It actually boots - I just want a new OS']
+];
+
+function recommend(platform, symptom) {
+  if (platform === 'Unknown') return { title: 'Identify the tablet first', action: 'detect', steps: [
+    'Check the back label: "TSW 7H" means HP Stream 7 (Windows).',
+    'Plug it into a PC and scan (section 03), or use "Identify my tablet" in the tool.'] };
+  if (symptom === 'dead') return { title: 'Revive the battery', action: 'firstaid', steps: [
+    'Charge with a 2 A wall charger + short cable for 4+ hours (not a PC port).',
+    'Hold Power 15-30 s (hard reset), release, then hold Power 5 s.',
+    'Try a second charger and cable before giving up.',
+    'Never any battery icon = dead battery or board; a battery swap is the fix.'] };
+  if (symptom === 'password') return { title: 'BIOS / power-on password', action: null, steps: [
+    'Enter a wrong password 3 times to get a halt code.',
+    'HP Support can turn the halt code + serial number into an unlock code.',
+    'There is no safe software bypass for this.'] };
+  if (symptom === 'bitlocker') return { title: 'BitLocker recovery screen', action: 'winusb', steps: [
+    'Get the key at account.microsoft.com/devices/recoverykey',
+    'No key? Data is unrecoverable, but you can reinstall (Windows or Linux).'] };
+  if (platform === 'Windows') {
+    if (symptom === 'logo') return { title: 'Stuck at HP logo / boot loop', action: 'winusb', steps: [
+      'Vol- + Power -> F2: run the storage (eMMC) test first.',
+      'Vol- + Power -> F11: HP System Recovery, if the partition survived.',
+      'Otherwise build a recovery USB (Windows) or deploy Linux.'] };
+    if (symptom === 'noboot') return { title: '"No bootable device"', action: 'linux', steps: [
+      'The OS is gone or the UEFI forgot its boot entry.',
+      'If you had Linux: a USB with BOOTIA32.EFI or re-running the Lazarus7 post-install script fixes it.',
+      'Otherwise reinstall from USB.'] };
+    if (symptom === 'boots') return { title: 'It boots - ready for a new OS', action: 'linux', steps: [
+      'Turn off Fast Startup in Windows, then deploy Linux from USB.',
+      'Optional: make an HP recovery USB first so you can go back.'] };
+  }
+  if (platform === 'Android') {
+    if (symptom === 'logo') return { title: 'Android boot loop', action: 'android', steps: [
+      'Try stock recovery: Power + Vol+ (on the 2800 sometimes Vol+ AND Vol-).',
+      'Wipe data / factory reset, or "apply update from ADB" with an HP OTA zip.',
+      'No recovery? Rockchip loader mode + RKDevTool full flash.'] };
+    if (symptom === 'noboot') return { title: 'Black screen but USB responds', action: 'android', steps: [
+      'Plug into a PC and scan (section 03).',
+      'Rockchip VID 2207 = loader mode: a full firmware flash is possible.'] };
+    if (symptom === 'boots') return { title: 'It boots Android', action: 'android', steps: [
+      'Enable USB debugging, then use the ADB tools to reboot to recovery / bootloader.'] };
+  }
+  return { title: 'No specific recommendation', action: null, steps: ['See the field guide.'] };
+}
+
+var wiz = document.getElementById('wizard');
+var state = {};
+
+function el(tag, attrs, children) {
+  var e = document.createElement(tag);
+  Object.keys(attrs || {}).forEach(function (k) {
+    if (k === 'text') e.textContent = attrs[k];
+    else if (k === 'on') e.addEventListener('click', attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  });
+  (children || []).forEach(function (c) { e.appendChild(c); });
+  return e;
+}
+function progress(n) {
+  return el('div', { 'class': 'steps' }, [0, 1, 2].map(function (i) { return el('span', { 'class': i < n ? 'on' : '' }); }));
+}
+function choice(label, hint, fn) {
+  var kids = [document.createTextNode(label)];
+  if (hint) kids.push(el('small', { text: hint }));
+  return el('button', { 'class': 'choice', on: fn }, kids);
+}
+function render(nodes) { wiz.innerHTML = ''; nodes.forEach(function (n) { wiz.appendChild(n); }); }
+
+function stepPlatform() {
+  render([progress(1), el('h3', { text: 'What did it originally run?' }),
+    el('div', { 'class': 'choices' }, [
+      choice('Windows 8.1 / 10', 'HP Stream 7, label TSW 7H', function () { state.platform = 'Windows'; stepSymptom(); }),
+      choice('Android', 'HP Slate 7 family', function () { state.platform = 'Android'; stepSymptom(); }),
+      choice("I'm not sure", null, function () { state.platform = 'Unknown'; state.symptom = 'dead'; stepResult(); })
+    ])]);
+}
+function stepSymptom() {
+  render([progress(2), el('h3', { text: 'What happens when you press Power (after charging)?' }),
+    el('div', { 'class': 'choices' }, SYMPTOMS.map(function (s) {
+      return choice(s[1], null, function () { state.symptom = s[0]; stepResult(); });
+    })),
+    el('p', {}, [el('button', { 'class': 'btn', text: 'Back', on: stepPlatform })])]);
+}
+function stepResult() {
+  var r = recommend(state.platform, state.symptom);
+  var kids = [progress(3), el('span', { 'class': 'pill', text: state.platform + (state.platform === 'Unknown' ? '' : ' - ' + state.symptom) }),
+    el('h3', { text: r.title }),
+    el('ol', {}, r.steps.map(function (s) { return el('li', { text: s }); }))];
+  if (r.action) kids.push(el('div', { 'class': 'tool', text: 'Next in the tool: ' + TOOL[r.action] }));
+  var row = el('p', {}, [el('button', { 'class': 'btn', text: 'Start over', on: stepPlatform })]);
+  if (r.action && ANCHOR[r.action]) {
+    row.appendChild(document.createTextNode(' '));
+    row.appendChild(el('a', { 'class': 'btn primary', href: ANCHOR[r.action], text: 'Take me there' }));
+  } else if (r.action) {
+    row.appendChild(document.createTextNode(' '));
+    row.appendChild(el('a', { 'class': 'btn primary', href: '#launch', text: 'Launch Lazarus7' }));
+  }
+  kids.push(row);
+  render([el('div', { 'class': 'rec' }, kids)]);
+}
+stepPlatform();
+
+// ---- WebUSB identify (mirrors src/Lazarus7.Detect.psm1) -----------------
+var VENDORS = {
+  0x2207: ['Rockchip', 'HP Slate 7 2800 (RK3066) in loader / mask-ROM mode', 'Full firmware flash is possible: Lazarus7 > Flash / recover Android > Rockchip.'],
+  0x0955: ['NVIDIA Tegra', 'HP Slate 7 Extreme / Plus (Tegra 4), APX recovery or ADB', 'If fastboot/recovery still works use those; APX flashing needs unpublished keys.'],
+  0x18d1: ['Android', 'ADB or fastboot interface', 'Android is partly alive: Lazarus7 > Flash / recover Android.'],
+  0x1286: ['Marvell', 'HP Slate 7 HD / VoiceTab download mode', 'Needs Marvell vendor tools; see the field guide.'],
+  0x0bb4: ['Android', 'Generic Android ADB interface', 'Lazarus7 > Flash / recover Android.']
+};
+var res = document.getElementById('usbres');
+var scanBtn = document.getElementById('scan');
+function hex(n) { return ('0000' + n.toString(16).toUpperCase()).slice(-4); }
+function showDevice(d) {
+  var v = VENDORS[d.vendorId];
+  res.innerHTML = '';
+  var card = el('div', { 'class': 'tool hit' }, [
+    el('div', { text: (v ? v[0] : 'USB device') + ' - VID ' + hex(d.vendorId) + ' / PID ' + hex(d.productId) + (d.productName ? ' - ' + d.productName : '') }),
+    el('div', { text: v ? v[1] : 'Not a known tablet chip.' }),
+    el('div', { text: v ? 'Next: ' + v[2] : '' })
+  ]);
+  res.appendChild(card);
+}
+if (!('usb' in navigator)) {
+  scanBtn.disabled = true;
+  res.appendChild(el('div', { 'class': 'tool', text: 'This browser has no WebUSB. Use Chrome or Edge, or run "Identify my tablet" in the desktop tool.' }));
+} else {
+  scanBtn.addEventListener('click', function () {
+    var filters = Object.keys(VENDORS).map(function (v) { return { vendorId: Number(v) }; });
+    navigator.usb.requestDevice({ filters: filters }).then(showDevice).catch(function (e) {
+      res.innerHTML = '';
+      res.appendChild(el('div', { 'class': 'tool', text: e.name === 'NotFoundError'
+        ? 'No tablet picked. If the list was empty: try another (data) cable, another port, and the key combos in First aid.'
+        : 'Scan failed: ' + e.message }));
+    });
+  });
+}
+</script>
+</body>
+</html>

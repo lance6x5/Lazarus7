@@ -1,0 +1,39 @@
+# Lazarus7 - Copyright (c) 2026 lance6x5 - MIT License
+#
+# Push a tag like v1.1.0 and this builds Lazarus7.zip + Lazarus7.zip.sha256
+# and publishes them as a GitHub release. The web launcher (docs/run.ps1)
+# always fetches the latest release and checks the SHA256.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pester
+        shell: powershell
+        run: |
+          $r = Invoke-Pester .\tests -PassThru
+          if ($r.FailedCount -gt 0) { exit 1 }
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build zip (git archive applies .gitattributes line endings)
+        run: |
+          git archive --format=zip --prefix=Lazarus7/ -o Lazarus7.zip HEAD
+          sha256sum Lazarus7.zip > Lazarus7.zip.sha256
+          cat Lazarus7.zip.sha256
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" Lazarus7.zip Lazarus7.zip.sha256 --title "Lazarus7 $GITHUB_REF_NAME" --generate-notes

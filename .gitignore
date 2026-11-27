@@ -5,3 +5,6 @@ tools/
 *.iso
 *.img
 *.zip
+
+# Local editor / preview config
+.claude/
