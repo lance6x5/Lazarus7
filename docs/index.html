@@ -4,8 +4,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lazarus7 - raise your 7-inch HP tablet from the dead</title>
-<meta name="description" content="Recovery and OS deployment wizard for the HP Stream 7 (TSW 7H) and HP Slate 7 tablets. Diagnose in the browser, launch the full tool with one line.">
+<title>Lazarus7 - raise your HP Stream 7 from the dead</title>
+<meta name="description" content="Recovery and OS deployment wizard for the HP Stream 7 (TSW 7H, Windows 8.1 with Bing): back up WIMBoot Windows, restore factory 8.1, or deploy Debian. Diagnose in the browser, launch the full tool with one line.">
 <link rel="icon" href="logo.svg">
 <style>
   :root {
@@ -112,10 +112,10 @@
 
 <nav><div class="wrap">
   <span class="brand">LAZARUS7</span>
-  <a class="ver" id="navVer" href="#changelog">v1.2.0</a>
+  <a class="ver" id="navVer" href="#changelog">v1.3.0</a>
   <a href="#launch">Launch</a>
   <a href="#diagnose">Diagnose</a>
-  <a href="#identify">Identify</a>
+  <a href="#identify">Android scan</a>
   <a href="#firstaid">First aid</a>
   <a href="#os">Other OSes</a>
   <a href="#changelog">Changelog</a>
@@ -124,11 +124,12 @@
 
 <header><div class="wrap">
   <img src="logo.svg" alt="Lazarus7 - Raise your 7-inch HP tablet from the dead.">
-  <p class="lead">Recovery and OS deployment for the <b>HP Stream 7</b> (label <code>TSW 7H</code>) and the
-    <b>HP Slate 7</b> family. Diagnose right here in your browser, then launch the full tool with one line.</p>
+  <p class="lead">Built for the <b>HP Stream 7</b> (label <code>TSW 7H</code>) that shipped with
+    <b>Windows 8.1 with Bing</b>. Back up its WIMBoot Windows, restore factory 8.1, or give it a second life on Debian.
+    Diagnose right here in your browser, then launch the full tool with one line.</p>
   <!-- Static values are the fallback; the script below refreshes them from the GitHub API. -->
-  <div class="relinfo" id="relinfo" data-version="1.2.0">
-    <a class="chip" id="chipVer" href="https://github.com/lance6x5/Lazarus7/releases/latest">Latest release <b>v1.2.0</b></a>
+  <div class="relinfo" id="relinfo" data-version="1.3.0">
+    <a class="chip" id="chipVer" href="https://github.com/lance6x5/Lazarus7/releases/latest">Latest release <b>v1.3.0</b></a>
     <span class="chip" id="chipRel">Released <b>2026-11-27</b></span>
     <a class="chip" id="chipSite" href="https://github.com/lance6x5/Lazarus7/commits/main/docs">Site updated <b>-</b></a>
   </div>
@@ -149,14 +150,14 @@
 
 <section id="diagnose">
   <h2><span class="n">02</span>Diagnose</h2>
-  <p class="sub">Two questions, then a concrete next step. This runs entirely in your browser.</p>
+  <p class="sub">Two questions, then a concrete next step. Runs entirely in your browser, using the same rules as the desktop tool.</p>
   <div class="card" id="wizard" aria-live="polite"></div>
 </section>
 
 <section id="identify">
-  <h2><span class="n">03</span>Identify my tablet</h2>
-  <p class="sub">Plug the tablet into this computer with a <b>data</b> cable, then scan. Needs Chrome or Edge (WebUSB).
-    Detection only: nothing is sent to the device.</p>
+  <h2><span class="n">03</span>Identify an Android tablet</h2>
+  <p class="sub">For Android HP Slate 7 tablets only. Plug the tablet in with a <b>data</b> cable, then scan.
+    Needs Chrome or Edge (WebUSB). Detection only: nothing is sent to the device.</p>
   <div class="card">
     <button class="btn primary" id="scan">Scan USB for a tablet</button>
     <div class="usbres" id="usbres"></div>
@@ -166,7 +167,7 @@
 </section>
 
 <section id="firstaid">
-  <h2><span class="n">04</span>First aid</h2>
+  <h2><span class="n">04</span>First aid for the Stream 7</h2>
   <p class="sub">No tools needed. Try these before anything else.</p>
   <div class="grid">
     <div class="card"><dl>
@@ -176,36 +177,42 @@
       <dd>Hold <kbd>Power</kbd> 15-30 s, release, then hold <kbd>Power</kbd> 5 s.</dd>
     </dl></div>
     <div class="card"><dl>
-      <dt>Stream 7 startup menu</dt>
+      <dt>Startup menu</dt>
       <dd>Tablet off: hold <kbd>Vol-</kbd>, press <kbd>Power</kbd> until the HP logo, release Power.</dd>
-      <dd><kbd>F2</kbd> diagnostics &middot; <kbd>F9</kbd> boot USB &middot; <kbd>F10</kbd> BIOS &middot; <kbd>F11</kbd> factory recovery</dd>
+      <dd><kbd>F2</kbd> diagnostics &middot; <kbd>F9</kbd> boot USB &middot; <kbd>F10</kbd> BIOS &middot; <kbd>F11</kbd> Windows recovery</dd>
+      <dt>F11 &rarr; Troubleshoot</dt>
+      <dd><b>Refresh your PC</b> keeps your files. <b>Reset your PC</b> erases everything and restores factory Windows 8.1.</dd>
     </dl></div>
     <div class="card"><dl>
-      <dt>Android Slate 7</dt>
-      <dd>Recovery: <kbd>Power</kbd> + <kbd>Vol+</kbd> (on the 2800 sometimes also <kbd>Vol-</kbd>).</dd>
-      <dt>Rockchip loader (Slate 7 2800)</dt>
-      <dd>Tablet off, hold <kbd>Vol+</kbd> while plugging USB into the PC.</dd>
+      <dt>WIMBoot: don't delete the recovery partition</dt>
+      <dd>C: holds only ~4 GB. The rest of Windows 8.1 lives compressed in the ~5 GB recovery partition, so deleting it
+        breaks Windows. Back it up first: Windows' <b>Recovery Drive</b> tool with "Copy the recovery partition" ticked,
+        on its own 8 GB+ stick.</dd>
     </dl></div>
     <div class="card"><dl>
       <dt>Shopping list for USB work</dt>
-      <dd>micro-USB OTG adapter, a <b>powered</b> USB hub, USB keyboard, an 8 GB+ USB stick.</dd>
+      <dd>micro-USB OTG adapter, a <b>powered</b> USB hub, USB keyboard (+ mouse: touch doesn't work in Windows Setup),
+        two 8 GB+ USB sticks.</dd>
+      <dt>Android Slate 7 instead?</dt>
+      <dd>Recovery: <kbd>Power</kbd> + <kbd>Vol+</kbd>. Rockchip loader: hold <kbd>Vol+</kbd> while plugging in USB.</dd>
     </dl></div>
   </div>
 </section>
 
 <section id="os">
-  <h2><span class="n">05</span>Other OSes for the Stream 7</h2>
+  <h2><span class="n">05</span>Operating systems for the Stream 7</h2>
   <p class="sub">Its Atom Z3735G is 64-bit, but the firmware is <b>32-bit UEFI only</b>: install media must contain
     <code>EFI\BOOT\BOOTIA32.EFI</code>. Lazarus7 checks this for you.</p>
   <div class="card" style="overflow-x:auto">
   <table>
     <tr><th>OS</th><th>Verdict</th><th>Notes</th></tr>
+    <tr><td>Windows 8.1 with Bing (stock)</td><td class="m">Restore only</td><td>HP recovery media brings back the factory WIMBoot image with all drivers. Out of support since Jan 2023: fine offline, risky online.</td></tr>
     <tr><td><b>Debian 12 i386</b></td><td class="y">Recommended</td><td>Lazarus7's default. Download is SHA256-verified, with tablet fixes applied after install. Security support to mid-2028.</td></tr>
     <tr><td>Debian 13 amd64</td><td class="x">Not out of the box</td><td>No i386 installer, and the amd64 netinst has only BOOTX64.EFI.</td></tr>
     <tr><td>Lubuntu / Xubuntu</td><td class="m">With surgery</td><td>Add GRUB ia32 by hand.</td></tr>
     <tr><td>Alpine / Arch</td><td class="m">DIY</td><td><code>grub-install --target=i386-efi</code>. Light on 1 GB RAM.</td></tr>
     <tr><td>Android-x86 / Bliss OS</td><td class="m">Experimental</td><td>Needs ia32 GRUB. Touch and rotation are hit-and-miss.</td></tr>
-    <tr><td>Windows 10 x86</td><td class="m">Works, unsupported</td><td>Out of support. Slow on 1 GB RAM / 32 GB eMMC.</td></tr>
+    <tr><td>Windows 10 x86</td><td class="m">Works, unsupported</td><td>Out of support since Oct 2025. May not activate with the 8.1 firmware key: Microsoft stopped honoring 8.x keys in 2023. Needs HP's 5701 drivers. Slow on 1 GB RAM.</td></tr>
     <tr><td>Windows 11, ChromeOS Flex, Fedora</td><td class="x">No</td><td>No 32-bit UEFI support.</td></tr>
   </table>
   </div>
@@ -237,66 +244,16 @@ document.querySelectorAll('[data-copy]').forEach(function (b) {
   });
 });
 
-// ---- diagnose wizard (mirrors src/Lazarus7.Triage.psm1) -----------------
-var TOOL = {
-  detect:   'Lazarus7 > Identify my tablet  (or the scanner below)',
-  firstaid: 'Lazarus7 > First aid  (or the cards below)',
-  winusb:   'Lazarus7 > Build Windows recovery USB',
-  linux:    'Lazarus7 > Deploy Linux',
-  android:  'Lazarus7 > Flash / recover Android Slate 7'
-};
+// ---- diagnose wizard: rules come from triage.json (shared with src/Lazarus7.Triage.psm1)
 var ANCHOR = { detect: '#identify', firstaid: '#firstaid' };
-
-var SYMPTOMS = [
-  ['dead',      'Completely dead, no charging icon'],
-  ['logo',      'Shows HP logo, then black screen / boot loop'],
-  ['password',  'Asks for a password before the logo'],
-  ['bitlocker', 'Blue BitLocker recovery-key screen'],
-  ['noboot',    '"No bootable device" / black screen'],
-  ['boots',     'It actually boots - I just want a new OS']
-];
+var TRIAGE = null;
 
 function recommend(platform, symptom) {
-  if (platform === 'Unknown') return { title: 'Identify the tablet first', action: 'detect', steps: [
-    'Check the back label: "TSW 7H" means HP Stream 7 (Windows).',
-    'Plug it into a PC and scan (section 03), or use "Identify my tablet" in the tool.'] };
-  if (symptom === 'dead') return { title: 'Revive the battery', action: 'firstaid', steps: [
-    'Charge with a 2 A wall charger + short cable for 4+ hours (not a PC port).',
-    'Hold Power 15-30 s (hard reset), release, then hold Power 5 s.',
-    'Try a second charger and cable before giving up.',
-    'Never any battery icon = dead battery or board; a battery swap is the fix.'] };
-  if (symptom === 'password') return { title: 'BIOS / power-on password', action: null, steps: [
-    'Enter a wrong password 3 times to get a halt code.',
-    'HP Support can turn the halt code + serial number into an unlock code.',
-    'There is no safe software bypass for this.'] };
-  if (symptom === 'bitlocker') return { title: 'BitLocker recovery screen', action: 'winusb', steps: [
-    'Get the key at account.microsoft.com/devices/recoverykey',
-    'No key? Data is unrecoverable, but you can reinstall (Windows or Linux).'] };
-  if (platform === 'Windows') {
-    if (symptom === 'logo') return { title: 'Stuck at HP logo / boot loop', action: 'winusb', steps: [
-      'Vol- + Power -> F2: run the storage (eMMC) test first.',
-      'Vol- + Power -> F11: HP System Recovery, if the partition survived.',
-      'Otherwise build a recovery USB (Windows) or deploy Linux.'] };
-    if (symptom === 'noboot') return { title: '"No bootable device"', action: 'linux', steps: [
-      'The OS is gone or the UEFI forgot its boot entry.',
-      'If you had Linux: a USB with BOOTIA32.EFI or re-running the Lazarus7 post-install script fixes it.',
-      'Otherwise reinstall from USB.'] };
-    if (symptom === 'boots') return { title: 'It boots - ready for a new OS', action: 'linux', steps: [
-      'Turn off Fast Startup in Windows, then deploy Linux from USB.',
-      'Optional: make an HP recovery USB first so you can go back.'] };
-  }
-  if (platform === 'Android') {
-    if (symptom === 'logo') return { title: 'Android boot loop', action: 'android', steps: [
-      'Try stock recovery: Power + Vol+ (on the 2800 sometimes Vol+ AND Vol-).',
-      'Wipe data / factory reset, or "apply update from ADB" with an HP OTA zip.',
-      'No recovery? Rockchip loader mode + RKDevTool full flash.'] };
-    if (symptom === 'noboot') return { title: 'Black screen but USB responds', action: 'android', steps: [
-      'Plug into a PC and scan (section 03).',
-      'Rockchip VID 2207 = loader mode: a full firmware flash is possible.'] };
-    if (symptom === 'boots') return { title: 'It boots Android', action: 'android', steps: [
-      'Enable USB debugging, then use the ADB tools to reboot to recovery / bootloader.'] };
-  }
-  return { title: 'No specific recommendation', action: null, steps: ['See the field guide.'] };
+  var t = TRIAGE;
+  if (platform === 'Unknown') return t.unknown;
+  if (t.common[symptom]) return t.common[symptom];
+  var p = t.byPlatform[platform] || {};
+  return p[symptom] || t.fallback;
 }
 
 var wiz = document.getElementById('wizard');
@@ -323,46 +280,62 @@ function choice(label, hint, fn) {
 function render(nodes) { wiz.innerHTML = ''; nodes.forEach(function (n) { wiz.appendChild(n); }); }
 
 function stepPlatform() {
-  render([progress(1), el('h3', { text: 'What did it originally run?' }),
-    el('div', { 'class': 'choices' }, [
-      choice('Windows 8.1 / 10', 'HP Stream 7, label TSW 7H', function () { state.platform = 'Windows'; stepSymptom(); }),
-      choice('Android', 'HP Slate 7 family', function () { state.platform = 'Android'; stepSymptom(); }),
-      choice("I'm not sure", null, function () { state.platform = 'Unknown'; state.symptom = 'dead'; stepResult(); })
-    ])]);
+  render([progress(1), el('h3', { text: 'Which tablet is it?' }),
+    el('div', { 'class': 'choices' }, TRIAGE.platforms.map(function (p) {
+      return choice(p.label, p.hint, function () {
+        state.platform = p.key;
+        if (p.key === 'Unknown') { state.symptom = 'dead'; stepResult(); } else { stepSymptom(); }
+      });
+    }))]);
 }
 function stepSymptom() {
   render([progress(2), el('h3', { text: 'What happens when you press Power (after charging)?' }),
-    el('div', { 'class': 'choices' }, SYMPTOMS.map(function (s) {
-      return choice(s[1], null, function () { state.symptom = s[0]; stepResult(); });
+    el('div', { 'class': 'choices' }, TRIAGE.symptoms[state.platform].map(function (s) {
+      return choice(s.label, null, function () { state.symptom = s.key; stepResult(); });
     })),
     el('p', {}, [el('button', { 'class': 'btn', text: 'Back', on: stepPlatform })])]);
 }
+// Steps starting with two spaces continue the previous step (same rule as the desktop tool).
+function stepList(steps) {
+  var ol = el('ol'), li = null;
+  steps.forEach(function (s) {
+    if (/^\s\s/.test(s) && li) { li.appendChild(document.createTextNode(' ' + s.trim())); return; }
+    li = el('li', { text: s });
+    ol.appendChild(li);
+  });
+  return ol;
+}
 function stepResult() {
   var r = recommend(state.platform, state.symptom);
-  var kids = [progress(3), el('span', { 'class': 'pill', text: state.platform + (state.platform === 'Unknown' ? '' : ' - ' + state.symptom) }),
-    el('h3', { text: r.title }),
-    el('ol', {}, r.steps.map(function (s) { return el('li', { text: s }); }))];
-  if (r.action) kids.push(el('div', { 'class': 'tool', text: 'Next in the tool: ' + TOOL[r.action] }));
+  var plat = TRIAGE.platforms.filter(function (p) { return p.key === state.platform; })[0];
+  var kids = [progress(3), el('span', { 'class': 'pill', text: plat ? plat.label : state.platform }),
+    el('h3', { text: r.title }), stepList(r.steps)];
+  if (r.action) kids.push(el('div', { 'class': 'tool', text: 'Next in the tool: Lazarus7 > ' + TRIAGE.tools[r.action] }));
   var row = el('p', {}, [el('button', { 'class': 'btn', text: 'Start over', on: stepPlatform })]);
-  if (r.action && ANCHOR[r.action]) {
+  if (r.action) {
     row.appendChild(document.createTextNode(' '));
-    row.appendChild(el('a', { 'class': 'btn primary', href: ANCHOR[r.action], text: 'Take me there' }));
-  } else if (r.action) {
-    row.appendChild(document.createTextNode(' '));
-    row.appendChild(el('a', { 'class': 'btn primary', href: '#launch', text: 'Launch Lazarus7' }));
+    row.appendChild(el('a', { 'class': 'btn primary', href: ANCHOR[r.action] || '#launch',
+                              text: ANCHOR[r.action] ? 'Take me there' : 'Launch Lazarus7' }));
   }
   kids.push(row);
   render([el('div', { 'class': 'rec' }, kids)]);
 }
-stepPlatform();
+
+fetch('triage.json')
+  .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function (t) { TRIAGE = t; stepPlatform(); })
+  .catch(function () {
+    render([el('span', { 'class': 'note' }, [document.createTextNode('Could not load the Diagnose rules. '),
+      el('a', { href: '#launch', text: 'Use the desktop tool' })])]);
+  });
 
 // ---- WebUSB identify (mirrors src/Lazarus7.Detect.psm1) -----------------
 var VENDORS = {
-  0x2207: ['Rockchip', 'HP Slate 7 2800 (RK3066) in loader / mask-ROM mode', 'Full firmware flash is possible: Lazarus7 > Flash / recover Android > Rockchip.'],
+  0x2207: ['Rockchip', 'HP Slate 7 2800 (RK3066) in loader / mask-ROM mode', 'Full firmware flash is possible: Lazarus7 > Other HP tablets: Android Slate 7 > Rockchip.'],
   0x0955: ['NVIDIA Tegra', 'HP Slate 7 Extreme / Plus (Tegra 4), APX recovery or ADB', 'If fastboot/recovery still works use those; APX flashing needs unpublished keys.'],
-  0x18d1: ['Android', 'ADB or fastboot interface', 'Android is partly alive: Lazarus7 > Flash / recover Android.'],
+  0x18d1: ['Android', 'ADB or fastboot interface', 'Android is partly alive: Lazarus7 > Other HP tablets: Android Slate 7.'],
   0x1286: ['Marvell', 'HP Slate 7 HD / VoiceTab download mode', 'Needs Marvell vendor tools; see the field guide.'],
-  0x0bb4: ['Android', 'Generic Android ADB interface', 'Lazarus7 > Flash / recover Android.']
+  0x0bb4: ['Android', 'Generic Android ADB interface', 'Lazarus7 > Other HP tablets: Android Slate 7.']
 };
 var res = document.getElementById('usbres');
 var scanBtn = document.getElementById('scan');

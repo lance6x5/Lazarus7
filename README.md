@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <b>A guided recovery and deployment wizard for HP's 7-inch tablets.</b><br>
-  HP Stream 7 (label <code>TSW 7H</code>) &nbsp;•&nbsp; HP Slate 7 family (2800 / HD / Extreme / Plus)
+  <b>A guided recovery and deployment wizard for the HP Stream 7.</b><br>
+  Label <code>TSW 7H</code> &nbsp;•&nbsp; shipped with Windows 8.1 with Bing &nbsp;•&nbsp; Android HP Slate 7 as a bonus
 </p>
 
 <p align="center">
@@ -15,10 +15,11 @@
 
 ---
 
-Your tablet isn't dead, just resting. **Lazarus7** walks you from "it won't turn on" to a working tablet:
-it diagnoses the problem, gives first-aid steps, builds bootable USB media the Stream 7's odd **32-bit UEFI**
-actually accepts, deploys Debian with tablet-specific fixes, and flashes Android Slates over ADB, fastboot or
-Rockchip loader mode.
+Your Stream 7 isn't dead, just resting. **Lazarus7** walks you from "it won't turn on" to a working tablet.
+It diagnoses the problem and gives Windows 8.1 first aid (F11 Refresh/Reset). It **backs up the WIMBoot Windows**
+before anything gets wiped, and restores factory 8.1 from HP recovery media. It also builds bootable USB media the
+Stream 7's odd **32-bit UEFI** actually accepts, and deploys Debian with tablet-specific fixes. Android HP Slate 7
+tablets get ADB, fastboot and Rockchip tools as a secondary path.
 
 ```
    _          _      _____     _      ____    _   _   ____    _____
@@ -27,13 +28,13 @@ Rockchip loader mode.
   | |___   / ___ \   / /_   / ___ \  |  _ <  | |_| |  ___) |   / /
   |_____| /_/   \_\ /____| /_/   \_\ |_| \_\  \___/  |____/   /_/
 
-  Raise your 7-inch HP tablet from the dead.   v1.2.0
+  Raise your 7-inch HP tablet from the dead.   v1.3.0
 ```
 
 ## 🌐 Run from the web
 
 **Website: <https://lance6x5.github.io/Lazarus7/>**. The Diagnose wizard, first aid and OS table run right in
-the browser, and *Identify my tablet* uses WebUSB in Chrome or Edge.
+the browser, and the Android scan uses WebUSB in Chrome or Edge.
 
 To launch the full tool, paste one line into **PowerShell**. It downloads the latest release, verifies the SHA256,
 and starts the wizard:
@@ -69,12 +70,12 @@ Nothing else to install: it runs on the Windows PowerShell 5.1 that every Window
 
 | Menu | What happens |
 |---|---|
-| **Diagnose** | A few questions (which OS, what the tablet does) lead to a concrete recommendation, then a jump to the right tool. |
-| **Identify my tablet** | Read-only USB scan that recognises Rockchip loader mode, Tegra APX, ADB/fastboot and missing drivers. |
-| **First aid** | Dead-battery revival, the Stream 7 startup menu (F2/F9/F10/F11), and Android recovery key combos. |
-| **Build Windows recovery USB** | From HP recovery files or a Windows 10 x86 ISO. Splits `install.wim` over 4 GB with DISM automatically. |
+| **Diagnose** | Which tablet, and what does it do? Covers Windows 8.1 cases like the Automatic Repair loop, BitLocker and a forgotten sign-in. Gives a concrete recommendation, then jumps to the right tool. |
+| **First aid** | Dead-battery revival, the startup menu (F2/F9/F10/F11), **Refresh vs Reset your PC**, and why you mustn't delete the WIMBoot partition. |
+| **Make a tablet toolkit USB** | Copies the tablet helpers onto any stick **without erasing it**. On the tablet, `Stream7-Check.cmd` saves a private report (serial, product number, firmware key, activation, WIMBoot, BitLocker). It can also turn off Fast Startup, start a **recovery drive** that copies the recovery partition, and install drivers. |
+| **Restore Windows** | From HP recovery media (factory 8.1 WIMBoot + drivers, recommended) or a Windows 10 x86 ISO, with honest activation and support warnings. It can add a Stream 7 drivers folder and splits `install.wim` over 4 GB with DISM. |
 | **Deploy Linux** | Downloads the latest **Debian 12 i386** netinst, **verifies SHA256**, writes a FAT32 stick and checks it has `EFI\BOOT\BOOTIA32.EFI`. It also adds the tablet-side tune-up script. |
-| **Flash / recover Android Slate 7** | Fetches Google platform-tools (signature-verified), then: device list, reboot to recovery/bootloader, `adb sideload`, `fastboot boot`/`flash`, and the Rockchip (Slate 7 2800) RKDevTool flow. |
+| **Identify a tablet over USB** / **Other HP tablets** | For Android Slate 7s: a read-only USB scan, plus Google platform-tools (signature-verified), `adb sideload`, `fastboot boot`/`flash` and the Rockchip flow. |
 
 ### Safety rails
 - Only **USB-attached, non-boot, non-system** disks can be selected, and the disk is re-checked right before wiping.
@@ -89,7 +90,10 @@ The Atom Z3735G is a 64-bit CPU, but HP shipped it with **32-bit-only UEFI**. It
 and Windows 11 all lack it. **Debian 12 i386** does have it, has a Stream 7 page on the Debian wiki, and keeps
 security support (LTS) until mid-2028. That's why it's the default.
 
-After install, `payload/stream7-debian-postinstall.sh` (copied onto the stick at `\lazarus7\`) adds:
+The stock **Windows 8.1 with Bing** runs in **WIMBoot** mode. C: holds about 4 GB and the rest of Windows lives in the
+~5 GB recovery partition, so deleting that partition breaks Windows. Lazarus7 makes you back it up first.
+
+After a Linux install, `payload/linux/stream7-debian-postinstall.sh` (copied onto the stick at `\lazarus7\linux\`) adds:
 WiFi/audio firmware, zram (1 GB RAM!), the rotation sensor, an on-screen keyboard, a GRUB fallback so a
 lost UEFI boot entry can't "re-brick" it, and the optional backlight/suspend fix.
 
@@ -101,8 +105,9 @@ The full manual walkthrough is in **[docs/GUIDE.md](docs/GUIDE.md)**.
 Lazarus7.cmd          double-click launcher (self-elevates)
 Lazarus7.ps1          main wizard
 src/                  modules: Ui, Detect, Triage, Download, Usb, Android
-payload/              files copied to the USB for use on the tablet
-docs/                 GitHub Pages site (index.html, run.ps1 launcher), field guide, logo
+payload/windows/      Stream7-Check helper, runs on the tablet under Windows 8.1 / 10
+payload/linux/        Debian post-install tune-up, runs on the tablet under Debian
+docs/                 GitHub Pages site (index.html, run.ps1 launcher), triage.json (shared Diagnose rules), field guide, logo
 tests/                Pester tests:  Invoke-Pester .\tests
 .github/workflows/    release.yml: tag v* -> tests -> Lazarus7.zip + .sha256 release
 ```

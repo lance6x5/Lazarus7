@@ -100,16 +100,52 @@ function Copy-L7Tree {
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed (exit $LASTEXITCODE)" }
 }
 
+function Get-L7RemovableVolume {
+    Get-Volume | Where-Object { $_.DriveType -eq 'Removable' -and $_.DriveLetter -and $_.FileSystem }
+}
+
+<#
+  Copies the tablet-side helpers (and optionally a drivers folder) onto an
+  existing USB stick WITHOUT erasing it:  <usb>\lazarus7\windows, <usb>\lazarus7\linux, <usb>\Drivers
+#>
+function Invoke-L7ToolkitUsb {
+    param([Parameter(Mandatory)][string]$PayloadDir, [string]$DriversDir, [switch]$DryRun)
+    $vols = @(Get-L7RemovableVolume)
+    if ($vols.Count -eq 0) {
+        Write-L7Warn 'No removable USB drive with a file system found. Plug in a FAT32/exFAT/NTFS stick.'
+        return
+    }
+    $items = foreach ($v in $vols) {
+        @{ Key = [string]$v.DriveLetter; Label = ("{0}:  {1}" -f $v.DriveLetter, $(if ($v.FileSystemLabel) { $v.FileSystemLabel } else { '(no label)' }));
+           Hint = ("{0}, {1:N1} GB free" -f $v.FileSystem, ($v.SizeRemaining / 1GB)) }
+    }
+    $letter = Read-L7Menu -Title 'Copy the Lazarus7 tablet toolkit to which stick? (nothing is erased)' -Items $items
+    if (-not $letter) { return }
+    $root = "${letter}:\"
+    Copy-L7Tree -From $PayloadDir -To (Join-Path $root 'lazarus7') -DryRun:$DryRun
+    if ($DriversDir) { Copy-L7Tree -From $DriversDir -To (Join-Path $root 'Drivers') -DryRun:$DryRun }
+    Write-L7Ok "Toolkit on ${letter}:\lazarus7\"
+    Write-L7Section 'Now on the Stream 7 (Windows 8.1 must still boot)'
+    Write-L7Info '1. Plug the stick in via the OTG adapter, open File Explorer, go to lazarus7\windows.'
+    Write-L7Info '2. Double-tap Stream7-Check.cmd and allow admin. It saves a report to lazarus7\reports'
+    Write-L7Info '   (serial, product number, firmware key, WIMBoot, BitLocker) - keep that file private.'
+    Write-L7Info '3. Option 2 in the helper: make a recovery drive on a SECOND 8 GB+ stick, ticking'
+    Write-L7Info '   "Copy the recovery partition". On a WIMBoot Stream 7 that partition IS Windows 8.1.'
+    Write-L7Info '4. Option 1: turn off Fast Startup before you install Linux.'
+}
+
 <#
   Main flow for both Windows recovery media and Linux deployment.
   Mode 'windows': folder (HP recovery) or Windows x86 ISO. Splits install.wim if > 4 GB.
-  Mode 'linux'  : ISO; adds the Lazarus7 tablet-side payload under \lazarus7\.
+  Mode 'linux'  : ISO.
+  Both modes add the Lazarus7 tablet-side payload under \lazarus7\ and, if given, \Drivers.
 #>
 function Invoke-L7BuildUsb {
     param(
         [Parameter(Mandatory)][ValidateSet('windows', 'linux')][string]$Mode,
         [Parameter(Mandatory)][string]$SourcePath,
         [Parameter(Mandatory)][string]$PayloadDir,
+        [string]$DriversDir,
         [switch]$DryRun
     )
     $src = Open-L7Source $SourcePath
@@ -153,9 +189,11 @@ function Invoke-L7BuildUsb {
                 if ($LASTEXITCODE -ne 0) { throw "DISM split failed (exit $LASTEXITCODE)" }
             }
         }
-        if ($Mode -eq 'linux') {
-            Copy-L7Tree -From $PayloadDir -To (Join-Path $dest 'lazarus7') -DryRun:$DryRun
-            Write-L7Ok 'Added \lazarus7\stream7-debian-postinstall.sh for after the install.'
+        Copy-L7Tree -From $PayloadDir -To (Join-Path $dest 'lazarus7') -DryRun:$DryRun
+        Write-L7Ok 'Added the Lazarus7 tablet helpers under \lazarus7\.'
+        if ($DriversDir) {
+            Copy-L7Tree -From $DriversDir -To (Join-Path $dest 'Drivers') -DryRun:$DryRun
+            Write-L7Ok 'Added drivers under \Drivers (Windows Setup: "Load driver" can use them too).'
         }
 
         if (-not $DryRun -and -not (Test-L7Ia32Boot $dest)) {
@@ -168,7 +206,10 @@ function Invoke-L7BuildUsb {
         Write-L7Info '4. Again Vol-Down + Power -> F9 Boot Options -> pick the USB stick.'
         if ($Mode -eq 'linux') {
             Write-L7Info '5. After Debian boots: plug the stick back in and run'
-            Write-L7Info '     sudo sh /media/<user>/LAZARUS7/lazarus7/stream7-debian-postinstall.sh --backlight'
+            Write-L7Info '     sudo sh /media/<user>/LAZARUS7/lazarus7/linux/stream7-debian-postinstall.sh --backlight'
+        } else {
+            Write-L7Info '5. Touch does not work inside Windows Setup - use the keyboard (and a mouse).'
+            Write-L7Info '6. After Windows is up: run \lazarus7\windows\Stream7-Check.cmd -> option 3 to install \Drivers.'
         }
     } finally {
         Close-L7Source $src
@@ -176,4 +217,4 @@ function Invoke-L7BuildUsb {
 }
 
 Export-ModuleMember -Function Get-L7UsbDisk, Select-L7UsbDisk, Open-L7Source, Close-L7Source, Test-L7Ia32Boot,
-    Get-L7OversizedFile, Initialize-L7UsbDisk, Copy-L7Tree, Invoke-L7BuildUsb
+    Get-L7OversizedFile, Initialize-L7UsbDisk, Copy-L7Tree, Invoke-L7BuildUsb, Get-L7RemovableVolume, Invoke-L7ToolkitUsb

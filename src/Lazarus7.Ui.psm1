@@ -4,7 +4,7 @@
 # Console UI: banner, menus, prompts, file pickers. Plain ASCII on purpose so it
 # renders correctly in the stock Windows PowerShell 5.1 console.
 
-$script:Lazarus7Version = '1.2.0'
+$script:Lazarus7Version = '1.3.0'
 
 # figlet "standard"-style glyphs, rendered by Show-Lazarus7Banner so that the
 # columns always line up.
@@ -41,7 +41,7 @@ function Show-Lazarus7Banner {
     Write-Host ''
     Write-Host '  Raise your 7-inch HP tablet from the dead.' -ForegroundColor Gray -NoNewline
     Write-Host ("   v$script:Lazarus7Version") -ForegroundColor DarkGray
-    Write-Host '  HP Stream 7 (TSW 7H)  |  HP Slate 7 family' -ForegroundColor DarkGray
+    Write-Host '  Built for the HP Stream 7 (TSW 7H, Windows 8.1)  |  + Android Slate 7' -ForegroundColor DarkGray
     if ($DryRun) {
         Write-Host '  [DRY RUN] No disks will be erased and nothing will be flashed.' -ForegroundColor Cyan
     }

@@ -60,19 +60,55 @@ Describe 'Get-L7TriageRecommendation' {
     It 'routes a Stream 7 boot loop to the Windows USB builder' {
         (Get-L7TriageRecommendation -Platform Windows -Symptom logo).Action | Should Be 'winusb'
     }
-    It 'routes a working Stream 7 to Linux deployment' {
-        (Get-L7TriageRecommendation -Platform Windows -Symptom boots).Action | Should Be 'linux'
-    }
     It 'routes Android problems to the Android tools' {
         (Get-L7TriageRecommendation -Platform Android -Symptom logo).Action | Should Be 'android'
     }
     It 'has a recommendation for every symptom on every platform' {
         foreach ($p in 'Windows', 'Android') {
-            foreach ($s in Get-L7Symptoms) {
+            foreach ($s in Get-L7Symptoms -Platform $p) {
                 $r = Get-L7TriageRecommendation -Platform $p -Symptom $s.Key
                 $r.Title | Should Not Be 'No specific recommendation'
             }
         }
+    }
+    It 'sends a Windows 8.1 Automatic Repair loop to the recovery USB' {
+        (Get-L7TriageRecommendation -Platform Windows -Symptom repair).Action | Should Be 'winusb'
+    }
+    It 'sends a working Stream 7 to the backup toolkit first, not straight to Linux' {
+        (Get-L7TriageRecommendation -Platform Windows -Symptom boots).Action | Should Be 'toolkit'
+    }
+    It 'only offers Windows-specific symptoms for the Stream 7' {
+        $android = (Get-L7Symptoms -Platform Android) | ForEach-Object { $_.Key }
+        $android -contains 'repair' | Should Be $false
+        $android -contains 'winpass' | Should Be $false
+        ((Get-L7Symptoms -Platform Windows) | ForEach-Object { $_.Key }) -contains 'repair' | Should Be $true
+    }
+    It 'only recommends actions the main menu can handle' {
+        $main = [IO.File]::ReadAllText((Join-Path (Split-Path $PSScriptRoot) 'Lazarus7.ps1'))
+        $handled = [regex]::Matches($main, "(?m)^\s*'(\w+)'\s*\{") | ForEach-Object { $_.Groups[1].Value }
+        foreach ($p in 'Windows', 'Android') {
+            foreach ($s in Get-L7Symptoms -Platform $p) {
+                $a = (Get-L7TriageRecommendation -Platform $p -Symptom $s.Key).Action
+                if ($a) { $handled -contains $a | Should Be $true }
+            }
+        }
+    }
+}
+
+Describe 'Tablet payload' {
+    $payload = Join-Path (Split-Path $PSScriptRoot) 'payload'
+    It 'ships the Windows helper and the Linux post-install script' {
+        Test-Path (Join-Path $payload 'windows\Stream7-Check.cmd') | Should Be $true
+        Test-Path (Join-Path $payload 'windows\Stream7-Check.ps1') | Should Be $true
+        Test-Path (Join-Path $payload 'linux\stream7-debian-postinstall.sh') | Should Be $true
+    }
+    It 'keeps the tablet helper parseable and free of PowerShell 5-only syntax (Windows 8.1 has 4.0)' {
+        $file = Join-Path $payload 'windows\Stream7-Check.ps1'
+        $errors = $null
+        [void][System.Management.Automation.Language.Parser]::ParseFile($file, [ref]$null, [ref]$errors)
+        @($errors).Count | Should Be 0
+        $code = (Get-Content $file | Where-Object { $_ -notmatch '^\s*#' }) -join "`n"
+        $code -match '::new\(|(?m)^\s*class\s|-AsHashtable|using namespace' | Should Be $false
     }
 }
 

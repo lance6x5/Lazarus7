@@ -5,8 +5,9 @@
     Lazarus7 - raise your 7-inch HP tablet from the dead.
 
 .DESCRIPTION
-    Interactive recovery and deployment wizard for the HP Stream 7 (TSW 7H) and
-    the Android HP Slate 7 family. Start it with Lazarus7.cmd (double-click),
+    Interactive recovery and deployment wizard for the HP Stream 7 (TSW 7H,
+    shipped with Windows 8.1 with Bing). Android HP Slate 7 tablets are
+    supported as a secondary path. Start it with Lazarus7.cmd (double-click),
     which asks for admin rights - needed only to write USB sticks.
 
 .PARAMETER DryRun
@@ -45,38 +46,67 @@ function Assert-L7AdminForUsb {
 }
 
 function Show-L7FirstAid {
-    Write-L7Section 'First aid (no tools needed)'
+    Write-L7Section 'First aid for the HP Stream 7 (no tools needed)'
     Write-Host '   Dead battery' -ForegroundColor White
     Write-L7Info '2 A wall charger + short cable, 4+ hours. A drained Bay Trail shows NOTHING for the first hour.'
     Write-L7Info 'Then hold Power 15-30 s (hard reset), release, hold Power 5 s to boot.'
     Write-Host ''
-    Write-Host '   Stream 7 startup menu' -ForegroundColor White
-    Write-L7Info 'Tablet off -> hold Vol-Down -> press Power until HP logo -> release Power.'
+    Write-Host '   Startup menu' -ForegroundColor White
+    Write-L7Info 'Tablet off -> hold Vol-Down -> press Power until HP logo -> release Power. Tap the keys:'
     Write-L7Info '  F2  hardware diagnostics (test the eMMC first!)'
     Write-L7Info '  F9  boot from USB'
     Write-L7Info '  F10 BIOS setup (Secure Boot, boot order with F5/F6)'
-    Write-L7Info '  F11 HP System Recovery (factory restore, if the partition still exists)'
+    Write-L7Info '  F11 Windows 8.1 recovery -> Troubleshoot:'
+    Write-L7Info '        "Refresh your PC" keeps your files;  "Reset your PC" erases all, back to factory'
     Write-Host ''
-    Write-Host '   Android Slate 7' -ForegroundColor White
-    Write-L7Info 'Recovery: Power + Vol+ (on the 2800 sometimes Power + Vol+ + Vol-).'
-    Write-L7Info 'Rockchip loader mode: tablet off, hold Vol+ while plugging USB into the PC.'
+    Write-Host '   Windows 8.1 facts that matter' -ForegroundColor White
+    Write-L7Info 'It is WIMBoot: C: holds ~4 GB, the rest of Windows lives in the ~5 GB recovery partition.'
+    Write-L7Info 'Deleting that partition breaks Windows 8.1. Back it up first (Make a tablet toolkit USB).'
+    Write-L7Info 'Windows 8.1 support ended Jan 2023. The Windows key is stored in the firmware.'
     Write-Host ''
     Write-Host '   You will need for USB work' -ForegroundColor White
-    Write-L7Info 'micro-USB OTG adapter, POWERED USB hub, USB keyboard, 8 GB+ USB stick.'
+    Write-L7Info 'micro-USB OTG adapter, POWERED USB hub, USB keyboard (+ mouse), 8 GB+ USB sticks (two for backups).'
+    Write-Host ''
+    Write-Host '   Android Slate 7 (not a Stream 7)' -ForegroundColor DarkGray
+    Write-L7Info 'Recovery: Power + Vol+ (2800: sometimes + Vol-). Rockchip loader: hold Vol+ while plugging in USB.'
+    Wait-L7Key
+}
+
+function Select-L7DriversDir {
+    if (-not (Read-L7YesNo 'Add a folder of HP Stream 7 5701 drivers to the stick? (recommended for Windows 10)')) { return $null }
+    Write-L7Info 'Get them from HP: support.hp.com -> "HP Stream 7 Tablet - 5701" (check the label: 5701 vs 5709).'
+    return (Select-L7Folder -Title 'Folder with the HP Stream 7 drivers')
+}
+
+function Invoke-L7Toolkit {
+    $drivers = Select-L7DriversDir
+    Invoke-L7ToolkitUsb -PayloadDir $Paths.Payload -DriversDir $drivers -DryRun:$DryRun
     Wait-L7Key
 }
 
 function Invoke-L7WindowsUsb {
     if (-not (Assert-L7AdminForUsb)) { return }
+    Write-L7Section 'Restore Windows on the Stream 7'
+    Write-L7Info 'Already made a recovery drive ON the tablet? It boots as-is: Vol- + Power -> F9 -> the stick.'
     $kind = Read-L7Menu -Title 'Windows recovery USB - source' -Items @(
-        @{ Key = 'hp';  Label = 'HP recovery files (folder)'; Hint = 'from HP Recovery Media, Windows 8.1' }
-        @{ Key = 'iso'; Label = 'Windows 10 x86 (32-bit) ISO'; Hint = 'out of support; Windows 11 is impossible here' }
+        @{ Key = 'hp';  Label = 'HP recovery files (folder) - recommended'; Hint = 'factory Windows 8.1 with Bing (WIMBoot) + all tablet drivers' }
+        @{ Key = 'iso'; Label = 'Windows 10 x86 (32-bit) ISO';             Hint = 'unsupported since Oct 2025; may NOT activate with the 8.1 key' }
     )
     if (-not $kind) { return }
-    $src = if ($kind -eq 'hp') { Select-L7Folder -Title 'Folder with the HP recovery USB files' }
-           else { Select-L7File -Title 'Windows 10 x86 ISO' -Filter 'ISO image (*.iso)|*.iso' }
+    $drivers = $null
+    if ($kind -eq 'hp') {
+        Write-L7Info 'Order or download from HP with the serial + product number (Stream7-Check saves both).'
+        Write-L7Info 'A generic Windows 8.1 ISO is NOT the same: no WIMBoot, no drivers, and it barely fits.'
+        $src = Select-L7Folder -Title 'Folder with the HP recovery USB files'
+    } else {
+        Write-L7Warn 'Windows 10 here: 32-bit only, end of support Oct 2025, and Microsoft stopped honouring'
+        Write-L7Warn 'Windows 8.x keys for upgrades in 2023 - a clean install may stay unactivated.'
+        Write-L7Info 'Best odds: in-place upgrade from a working 8.1 first, confirm activation, THEN clean install.'
+        $src = Select-L7File -Title 'Windows 10 x86 ISO' -Filter 'ISO image (*.iso)|*.iso'
+        if ($src) { $drivers = Select-L7DriversDir }
+    }
     if (-not $src) { return }
-    Invoke-L7BuildUsb -Mode windows -SourcePath $src -PayloadDir $Paths.Payload -DryRun:$DryRun
+    Invoke-L7BuildUsb -Mode windows -SourcePath $src -PayloadDir $Paths.Payload -DriversDir $drivers -DryRun:$DryRun
     Wait-L7Key
 }
 
@@ -104,6 +134,7 @@ function Invoke-L7Action {
                          else { Wait-L7Key } }
             'triage'   { $next = Invoke-L7TriageWizard }
             'firstaid' { Show-L7FirstAid }
+            'toolkit'  { Invoke-L7Toolkit }
             'winusb'   { Invoke-L7WindowsUsb }
             'linux'    { Invoke-L7LinuxUsb }
             'android'  { Invoke-L7AndroidWizard -ToolsDir $Paths.Tools -DryRun:$DryRun }
@@ -116,12 +147,13 @@ function Invoke-L7Action {
 while ($true) {
     Show-Lazarus7Banner -DryRun:$DryRun
     $choice = Read-L7Menu -Title 'Main menu' -BackLabel 'Quit' -Items @(
-        @{ Key = 'triage';   Label = 'Diagnose - what is wrong?';        Hint = 'start here' }
-        @{ Key = 'detect';   Label = 'Identify my tablet';               Hint = 'USB scan' }
-        @{ Key = 'firstaid'; Label = 'First aid';                        Hint = 'battery, key combos, BIOS' }
-        @{ Key = 'winusb';   Label = 'Build Windows recovery USB';       Hint = 'Stream 7' }
-        @{ Key = 'linux';    Label = 'Deploy Linux';                     Hint = 'Stream 7 - Debian USB + tablet tweaks' }
-        @{ Key = 'android';  Label = 'Flash / recover Android Slate 7';  Hint = 'ADB, fastboot, Rockchip' }
+        @{ Key = 'triage';   Label = 'Diagnose - what is wrong?';          Hint = 'start here' }
+        @{ Key = 'firstaid'; Label = 'First aid';                          Hint = 'battery, F2/F9/F10/F11, Refresh/Reset' }
+        @{ Key = 'toolkit';  Label = 'Make a tablet toolkit USB';          Hint = 'back up Windows 8.1 first - nothing erased' }
+        @{ Key = 'winusb';   Label = 'Restore Windows (recovery USB)';     Hint = 'factory 8.1 or Windows 10 x86' }
+        @{ Key = 'linux';    Label = 'Deploy Linux';                       Hint = 'Debian 12 USB + tablet tweaks' }
+        @{ Key = 'detect';   Label = 'Identify a tablet over USB';         Hint = 'Android only - a Stream 7 never shows up' }
+        @{ Key = 'android';  Label = 'Other HP tablets: Android Slate 7';  Hint = 'ADB, fastboot, Rockchip' }
         @{ Key = 'guide';    Label = 'Open the full guide' }
     )
     if (-not $choice) { break }

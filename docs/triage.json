@@ -1,0 +1,141 @@
+{
+  "_comment": "Lazarus7 (c) 2026 lance6x5, MIT. Single source for the Diagnose wizard: read by src/Lazarus7.Triage.psm1 and docs/index.html. Steps starting with two spaces continue the previous step. Keep ASCII.",
+  "platforms": [
+    { "key": "Windows", "label": "HP Stream 7 - came with Windows 8.1", "hint": "label TSW 7H - what Lazarus7 is built for" },
+    { "key": "Android", "label": "HP Slate 7 - Android", "hint": "secondary support" },
+    { "key": "Unknown", "label": "I'm not sure", "hint": "" }
+  ],
+  "tools": {
+    "detect":   "Identify a tablet over USB",
+    "firstaid": "First aid",
+    "toolkit":  "Make a tablet toolkit USB",
+    "winusb":   "Restore Windows (recovery USB)",
+    "linux":    "Deploy Linux",
+    "android":  "Other HP tablets: Android Slate 7",
+    "guide":    "Open the full guide"
+  },
+  "symptoms": {
+    "Windows": [
+      { "key": "dead",      "label": "Completely dead, no charging icon" },
+      { "key": "logo",      "label": "Shows HP logo, then black screen / boot loop" },
+      { "key": "repair",    "label": "Automatic Repair loop / \"Your PC ran into a problem\"" },
+      { "key": "bitlocker", "label": "Blue BitLocker recovery-key screen" },
+      { "key": "winpass",   "label": "Forgot the Windows sign-in password" },
+      { "key": "password",  "label": "Asks for a password BEFORE the HP logo (BIOS)" },
+      { "key": "noboot",    "label": "\"No bootable device\"" },
+      { "key": "boots",     "label": "Windows 8.1 works - I want to back up / move to a new OS" }
+    ],
+    "Android": [
+      { "key": "dead",     "label": "Completely dead, no charging icon" },
+      { "key": "logo",     "label": "Boot logo, then black screen / boot loop" },
+      { "key": "password", "label": "Asks for a password before the logo" },
+      { "key": "noboot",   "label": "Black screen, but the PC sees it over USB" },
+      { "key": "boots",    "label": "It boots Android" }
+    ]
+  },
+  "unknown": {
+    "title": "Identify the tablet first", "action": "detect",
+    "steps": [
+      "Back label \"TSW 7H\", Windows logo, shipped with Windows 8.1 = HP Stream 7.",
+      "Android tablets: plug into a PC and run \"Identify a tablet over USB\"."
+    ]
+  },
+  "common": {
+    "dead": {
+      "title": "Revive the battery", "action": "firstaid",
+      "steps": [
+        "Charge with a 2 A wall charger + short cable for 4+ hours (not a PC port).",
+        "Hold Power 15-30 s (hard reset), release, then hold Power 5 s.",
+        "Try a second charger and cable before giving up.",
+        "Never any battery icon = dead battery or board; a battery swap is the fix."
+      ]
+    },
+    "password": {
+      "title": "BIOS / power-on password", "action": null,
+      "steps": [
+        "Enter a wrong password 3 times to get a halt code.",
+        "HP Support can turn the halt code + serial number into an unlock code.",
+        "There is no safe software bypass for this."
+      ]
+    },
+    "bitlocker": {
+      "title": "BitLocker recovery screen", "action": "winusb",
+      "steps": [
+        "Windows 8.1 with Bing turns on Device Encryption when you sign in with a Microsoft account.",
+        "Get the key at https://account.microsoft.com/devices/recoverykey",
+        "No key? Data is unrecoverable, but F11 > Reset your PC or a recovery USB still works."
+      ]
+    }
+  },
+  "byPlatform": {
+    "Windows": {
+      "repair": {
+        "title": "Automatic Repair loop / \"Your PC ran into a problem\"", "action": "winusb",
+        "steps": [
+          "Vol- + Power -> F2: run the storage (eMMC) test first - loops are often a failing eMMC.",
+          "Vol- + Power -> F11 -> Troubleshoot -> \"Refresh your PC\" (keeps your files).",
+          "Still broken: same menu -> \"Reset your PC\" (erases everything, back to factory 8.1).",
+          "Refresh/Reset fail = recovery partition damaged: restore from HP recovery media."
+        ]
+      },
+      "winpass": {
+        "title": "Forgot the Windows sign-in", "action": null,
+        "steps": [
+          "Microsoft account: reset it at https://account.live.com/password/reset, then",
+          "  connect the tablet to Wi-Fi from the sign-in screen and use the new password.",
+          "Local account without a reset disk: no safe bypass.",
+          "Vol- + Power -> F11 -> \"Reset your PC\" restores factory Windows 8.1 (erases data)."
+        ]
+      },
+      "logo": {
+        "title": "Stuck at HP logo / boot loop", "action": "winusb",
+        "steps": [
+          "Vol- + Power -> F2: run the storage (eMMC) test first.",
+          "Vol- + Power -> F11: Refresh / Reset your PC, if the recovery partition survived.",
+          "Otherwise restore from an HP recovery USB, or deploy Linux."
+        ]
+      },
+      "noboot": {
+        "title": "\"No bootable device\"", "action": "winusb",
+        "steps": [
+          "Windows is gone (often the WIMBoot recovery partition was deleted) or the UEFI lost its boot entry.",
+          "Restore Windows 8.1 from HP recovery media, or deploy Linux.",
+          "Had Linux already? Re-running the Lazarus7 post-install script fixes the boot entry."
+        ]
+      },
+      "boots": {
+        "title": "It boots Windows 8.1 - back it up before anything else", "action": "toolkit",
+        "steps": [
+          "Windows 8.1 is out of support (Jan 2023): OK offline, risky on the internet.",
+          "Make a Lazarus7 tablet toolkit USB and run lazarus7\\windows\\Stream7-Check.cmd on the tablet:",
+          "  it saves serial, product number, firmware key, WIMBoot and BitLocker status.",
+          "From the same helper, make a recovery drive on a SECOND 8 GB+ stick. This tablet uses",
+          "  WIMBoot, so the recovery partition IS your Windows - that stick is your way back.",
+          "Then turn off Fast Startup (helper option 1) and deploy Linux."
+        ]
+      }
+    },
+    "Android": {
+      "logo": {
+        "title": "Android boot loop", "action": "android",
+        "steps": [
+          "Try stock recovery: Power + Vol+ (on the 2800 sometimes Vol+ AND Vol-).",
+          "Wipe data/factory reset, or \"apply update from ADB\" with an HP OTA zip.",
+          "No recovery? Rockchip loader mode + RKDevTool full flash."
+        ]
+      },
+      "noboot": {
+        "title": "Black screen but USB responds", "action": "android",
+        "steps": [
+          "Plug into a PC and run \"Identify a tablet over USB\".",
+          "Rockchip VID 2207 = loader mode: full firmware flash is possible."
+        ]
+      },
+      "boots": {
+        "title": "It boots Android", "action": "android",
+        "steps": [ "Enable USB debugging, then use ADB tools to reboot to recovery/bootloader." ]
+      }
+    }
+  },
+  "fallback": { "title": "No specific recommendation", "action": "guide", "steps": [ "See docs/GUIDE.md." ] }
+}
