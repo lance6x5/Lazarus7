@@ -17,8 +17,10 @@
   "symptoms": {
     "Windows": [
       { "key": "dead",      "label": "Completely dead, no charging icon" },
-      { "key": "logo",      "label": "Shows HP logo, then black screen / boot loop" },
+      { "key": "black",     "label": "HP logo, then a blank black screen" },
+      { "key": "logo",      "label": "HP logo keeps coming back (boot loop)" },
       { "key": "repair",    "label": "Automatic Repair loop / \"Your PC ran into a problem\"" },
+      { "key": "c0000225",  "label": "Error 0xc0000225 \"Your PC needs to be repaired\" (also from F11)" },
       { "key": "bitlocker", "label": "Blue BitLocker recovery-key screen" },
       { "key": "winpass",   "label": "Forgot the Windows sign-in password" },
       { "key": "password",  "label": "Asks for a password BEFORE the HP logo (BIOS)" },
@@ -69,6 +71,33 @@
   },
   "byPlatform": {
     "Windows": {
+      "black": {
+        "title": "HP logo, then a blank black screen", "action": "winusb",
+        "steps": [
+          "Charge 2+ hours, power on, then WAIT 15 minutes - updates or Automatic Repair can run behind a black screen.",
+          "USB keyboard on the OTG adapter: press Ctrl+Alt+Del, then Win+Ctrl+Shift+B (restarts the graphics driver).",
+          "  Something appears = Windows is alive and the display driver is the problem.",
+          "Shine a flashlight at the screen: a faint image means the backlight failed (hardware).",
+          "Vol- + Power: if the startup menu shows, firmware and screen are fine. F2 -> storage (eMMC) test.",
+          "F11 -> Troubleshoot -> Advanced options: Startup Repair, then Startup Settings ->",
+          "  \"Enable low-resolution video\" or Safe Mode. Last resort: Refresh your PC.",
+          "F11 also black or \"partition missing\" = WIMBoot recovery partition damaged: boot from USB",
+          "  (recovery media, or a Debian stick - a picture in Debian proves the hardware is fine)."
+        ]
+      },
+      "c0000225": {
+        "title": "0xc0000225 - a required device can't be accessed", "action": "winusb",
+        "steps": [
+          "The boot manager can't reach the boot files: a failing eMMC, a damaged/deleted WIMBoot",
+          "  recovery partition, or a corrupted boot configuration (BCD) - the last one is fixable.",
+          "Vol- + Power -> F2 -> storage test FIRST. If the eMMC fails, stop: software can't fix it.",
+          "Storage OK: build a Windows 10 x86 stick (Microsoft ISO) with Lazarus7 - it includes the repair helper.",
+          "Boot it (F9, USB keyboard) -> Repair your computer -> Troubleshoot -> Startup Repair.",
+          "Still failing: Command Prompt -> D:\\lazarus7\\windows\\Stream7-Repair.cmd (try E:/F: if D: is wrong).",
+          "  It shows which partitions survived, checks WIMBoot + boot files, and can rebuild them (bcdboot).",
+          "WIMBoot partition gone = Windows 8.1 can't return without recovery media: install Windows 10 or Debian."
+        ]
+      },
       "repair": {
         "title": "Automatic Repair loop / \"Your PC ran into a problem\"", "action": "winusb",
         "steps": [
@@ -88,7 +117,7 @@
         ]
       },
       "logo": {
-        "title": "Stuck at HP logo / boot loop", "action": "winusb",
+        "title": "HP logo boot loop", "action": "winusb",
         "steps": [
           "Vol- + Power -> F2: run the storage (eMMC) test first.",
           "Vol- + Power -> F11: Refresh / Reset your PC, if the recovery partition survived.",

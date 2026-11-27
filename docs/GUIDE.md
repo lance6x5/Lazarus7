@@ -28,7 +28,9 @@ and F11 recovery disappears with it. Lazarus7's tablet helper reports whether yo
 | Symptom | Likely cause | Go to |
 |---|---|---|
 | Totally dead, no charging icon | Deep-discharged battery (very common on this model) | 2a |
-| HP logo, then black screen / boot loop | Corrupt Windows, failed Windows 10 upgrade, or a failing eMMC | 2b, 2e, 4 |
+| HP logo, then a **blank black screen** | Windows failing to start (display driver, damaged WIMBoot files), a failing eMMC, or rarely the backlight | 2g |
+| Error **0xc0000225** "Your PC needs to be repaired" (also from F11) | Boot files or the WIMBoot partition unreachable: eMMC, deleted partition, or broken BCD | 2h |
+| HP logo keeps coming back (boot loop) | Corrupt Windows, failed Windows 10 upgrade, or a failing eMMC | 2b, 2e, 4 |
 | Automatic Repair loop / "Your PC ran into a problem" | Damaged Windows files, often a full or failing eMMC | 2b, 2e |
 | Blue BitLocker / recovery-key screen | Device Encryption (on by default with a Microsoft account) | 2c |
 | Forgot the Windows sign-in | Microsoft or local account password | 2f |
@@ -75,6 +77,54 @@ is damaged or gone: use a recovery USB (section 4).
 - **Microsoft account:** reset the password at <https://account.live.com/password/reset> from another device. Then
   connect the tablet to Wi-Fi from the sign-in screen (network icon, bottom right) and sign in with the new one.
 - **Local account without a password reset disk:** no safe bypass. **Reset your PC** (2e) erases data and restores 8.1.
+
+### 2g. HP logo, then a blank black screen
+Work down the list. Each step tells you which part is broken.
+1. **Charge and wait.** Charge for 2+ hours, power on, then wait a full **15 minutes**. On this slow eMMC, Windows
+   Update or Automatic Repair can run behind a black screen.
+2. **Is Windows alive?** With a USB keyboard on the OTG adapter, press **Ctrl+Alt+Del**, then **Win+Ctrl+Shift+B**
+   (restarts the graphics driver). If anything appears, Windows works and the display driver is at fault.
+3. **Flashlight test.** Shine a torch at the screen at an angle. A faint picture means the **backlight** failed, which
+   is hardware.
+4. **Startup menu** (Vol-Down + Power). If it shows, the firmware and screen are fine. Then:
+   - **F2:** run the storage (eMMC) test. A dying eMMC causes exactly this symptom.
+   - **F11 → Troubleshoot → Advanced options:** try **Startup Repair**. Then try **Startup Settings → Enable
+     low-resolution video**, or **Safe Mode**, to rule out the display driver. Last resort: **Refresh your PC** (2e).
+5. **F11 also black, or "a required drive partition is missing"?** The WIMBoot recovery partition is damaged. Boot from
+   USB instead (section 4 or 5). If a Debian stick shows a picture, the hardware is fine and only Windows is broken.
+   For **0xc0000225**, see 2h.
+
+### 2h. Error 0xc0000225: "Your PC needs to be repaired, a required device isn't connected or can't be accessed"
+The boot manager can't reach the files it needs. If **F11** shows this too, both of Windows' start paths are broken,
+so the fix has to come from USB. Causes, most serious first:
+- a **failing eMMC**;
+- a **damaged or deleted WIMBoot recovery partition** (common after a failed Windows 10 upgrade or a partition tool);
+- a **corrupted boot configuration (BCD)**, which is fixable.
+
+1. **Vol-Down + Power → F2 → storage test.** If the eMMC fails, stop: no software fixes that.
+2. **Make a repair stick.** Get Microsoft's **Windows 10 32-bit (x86)** ISO (Media Creation Tool), then use
+   `Lazarus7.cmd` → **Restore Windows → Windows 10 x86 ISO**. Every Lazarus7 stick carries the repair helper in
+   `\lazarus7\windows\`.
+3. **Boot it** (Vol-Down + Power → **F9**, with a USB keyboard because touch doesn't work). Choose **Repair your
+   computer** (*not* Install) → Troubleshoot → **Startup Repair**.
+4. **Still failing?** Troubleshoot → **Command Prompt**, then run the helper (the stick may be `E:` or `F:`, check with
+   `dir D:\lazarus7`):
+   ```bat
+   D:\lazarus7\windows\Stream7-Repair.cmd
+   ```
+   It **only looks** until the last step:
+   1. it lists the eMMC's partitions;
+   2. it finds Windows (or tells you BitLocker has locked it: `manage-bde -unlock C: -RecoveryPassword <key>`);
+   3. it checks the **WIMBoot** links with `dism /Get-WIMBootEntry`;
+   4. it checks the EFI partition and the **BCD** store, with an optional read-only `chkdsk`;
+   5. only if you type `REPAIR`, it runs `bcdboot <Windows>\Windows /s S: /f UEFI`.
+
+   Everything is logged to `\lazarus7\reports\` on the stick.
+5. **Reading the result:**
+   - **BCD missing, Windows and WIMBoot partition present:** step 5 should bring normal boot back.
+   - **WIMBoot partition gone:** Windows 8.1 can't start again, and rebuilding boot files won't help. Restore from
+     recovery media (section 4) or install a new OS (Windows 10 x86, or Debian, section 5).
+   - **No Windows volume and no BitLocker:** Windows was erased, so it's the same choice.
 
 ---
 
@@ -201,6 +251,25 @@ the PC and use **Identify a tablet over USB** while trying the button combos:
 | Slate 7 Extreme / Plus | NVIDIA Tegra 4 (VID 0955) | APX: Vol− and Power | NVIDIA `nvflash`. Needs device-specific blobs, so recovery is hard. |
 | Any, if ADB/fastboot appears | Google VID 18D1 | Power + Vol+ (+Vol−) for stock recovery | Android platform-tools: `adb sideload` an HP OTA zip |
 
+### Button combos by model
+All combos start with the tablet **off**. Confidence: **HP** = HP Support Community, **reported** = owners or
+third-party guides, **generic** = standard Android or chip behavior, not confirmed on that model. The same data
+(`docs/keycombos.json`) drives Lazarus7 → **Other HP tablets → Button combos** and the website.
+
+| Model | Recovery | Flashing mode | Factory reset |
+|---|---|---|---|
+| Slate 7 **2800** (Rockchip) | Vol− + Vol+ + Power, release at HP logo *(HP)*; else Power + Vol+ | **Loader:** hold Vol+ while plugging USB into the PC, about 5 s *(reported)* | Recovery → wipe data/factory reset *(HP)* |
+| Slate 7 **Extreme** 4400/4450 (Tegra 4) | Vol+ + Power, release at logo → boot menu *(reported)* | **Fastboot:** boot menu → Vol− → Power *(reported)*; `fastboot -i 0x03F0 devices`. **APX:** hold Vol+, press Power, release Vol+ *(generic)* | via recovery |
+| Slate 7 **Plus** 4200 (Tegra 4) | Vol+ + Power, release at logo *(reported)* | Fastboot / APX as Extreme *(generic)* | via recovery |
+| Slate 7 **4600/4601** | Vol+ + Vol− + Power, release at logo *(reported)* | – | via recovery |
+| Slate 7 **VoiceTab** (Marvell) | Power + Vol+ until logo + vibration *(HP)* | – | Recovery → Vol− to Wipe data/factory reset → Power → Yes *(HP)* |
+| Slate 7 **HD** (Marvell) | Try Power + Vol+, then Vol+ + Vol− + Power *(generic)* | – | via recovery |
+
+**All models:** in recovery, Vol+/Vol− moves and Power selects (touch is off). On a **"No command"** screen, hold Power
+and tap Vol+. Force restart: hold **Power 10–15 s**. Safe mode: hold Power → long-press **Power off** → OK.
+Screenshot: **Power + Vol−**. From a PC with USB debugging: `adb reboot recovery` / `adb reboot bootloader`.
+Leave APX by holding Power 10+ s. A factory reset may trigger the Google account lock (FRP).
+
 ---
 
 ## Sources
@@ -216,3 +285,10 @@ the PC and use **Identify a tablet over USB** while trying the button combos:
 - Stream 7 install notes: <https://newscrewdriver.com/2022/01/19/miscellaneous-notes-on-hp-stream-7-installation/>
 - HP Community, Linux on Stream (grubia32 issue): <https://h30434.www3.hp.com/t5/Tablets-and-Mobile-Devices-Ready-Only/Linux-on-the-HP-Stream-tablet/td-p/6675613>
 - XDA, Slate 7 2800 stock ROM: <https://forum.xda-developers.com/showthread.php?t=2608181>
+- HP Community, Slate 7 2800 recovery from the Android system recovery screen: <https://h30434.www3.hp.com/t5/Tablets-and-Mobile-Devices-Archive-Read-Only/Slate-7-2800-how-to-recover-from-Android-System-recovery/td-p/6361765>
+- HP Community, Slate 7 (VoiceTab) recovery and factory reset steps: <https://h30434.www3.hp.com/t5/Tablets-and-Mobile-Devices-Archive-Read-Only/slate-7/td-p/6342385>
+- XDA, Slate 7 Extreme root/flash (fastboot, HP vendor ID): <https://xdaforums.com/t/q-slate-7-extreme-root-flash-question.2752604/>
+- XDA, Slate 7 Extreme stuck in APX mode: <https://xdaforums.com/t/hp-slate-7-extreme-stuck-in-apx-mode.3276011/>
+- Open Surface RT, Tegra special boot modes (generic APX combo): <https://open-rt.gitbook.io/open-surfacert/common/boot-sequence/special-boot-modes>
+- iFixit, HP Slate 7 4601 troubleshooting: <https://www.ifixit.com/Wiki/HP_Slate_7_4601_Troubleshooting>
+- Droid Recovery, Slate 7 Plus recovery mode: <https://droidrecovery.com/hp-slate-7-plus-recovery-mode/>

@@ -95,12 +95,52 @@ Describe 'Get-L7TriageRecommendation' {
     }
 }
 
+Describe 'Slate 7 button combos (docs/keycombos.json)' {
+    $data = [IO.File]::ReadAllText((Join-Path (Split-Path $PSScriptRoot) 'docs\keycombos.json')) | ConvertFrom-Json
+    $labels = @($data.confidenceLabels.PSObject.Properties.Name)
+
+    It 'is ASCII so PowerShell 5.1 and the browser read it the same' {
+        $bytes = [IO.File]::ReadAllBytes((Join-Path (Split-Path $PSScriptRoot) 'docs\keycombos.json'))
+        @($bytes | Where-Object { $_ -gt 127 }).Count | Should Be 0
+    }
+    It 'gives every model a unique key and a recovery combo' {
+        $keys = @($data.models | ForEach-Object key)
+        ($keys | Sort-Object -Unique).Count | Should Be $keys.Count
+        foreach ($m in $data.models) {
+            @($m.combos | Where-Object { $_.action -match 'Recovery' }).Count -ge 1 | Should Be $true
+        }
+    }
+    It 'labels every combo with a known confidence level and real keys' {
+        foreach ($c in @($data.models | ForEach-Object { $_.combos }) + @($data.common)) {
+            $labels -contains $c.confidence | Should Be $true
+            [string]::IsNullOrWhiteSpace($c.keys) | Should Be $false
+        }
+    }
+    It 'is what the desktop module serves' {
+        @(Get-L7KeyComboModels).Count | Should Be @($data.models).Count
+        @(Get-L7CommonKeyCombos).Count | Should Be @($data.common).Count
+    }
+}
+
 Describe 'Tablet payload' {
     $payload = Join-Path (Split-Path $PSScriptRoot) 'payload'
     It 'ships the Windows helper and the Linux post-install script' {
         Test-Path (Join-Path $payload 'windows\Stream7-Check.cmd') | Should Be $true
         Test-Path (Join-Path $payload 'windows\Stream7-Check.ps1') | Should Be $true
+        Test-Path (Join-Path $payload 'windows\Stream7-Repair.cmd') | Should Be $true
         Test-Path (Join-Path $payload 'linux\stream7-debian-postinstall.sh') | Should Be $true
+    }
+    It 'keeps the WinPE repair helper ASCII and its only write step behind the REPAIR prompt' {
+        $file = Join-Path $payload 'windows\Stream7-Repair.cmd'
+        @([IO.File]::ReadAllBytes($file) | Where-Object { $_ -gt 127 }).Count | Should Be 0
+        $lines = Get-Content $file
+        $bcd = @($lines | Select-String -Pattern '^\s*bcdboot ')
+        $bcd.Count | Should Be 1
+        $gate = @($lines | Select-String -Pattern 'if not "!ANS!"=="REPAIR"')
+        $gate.Count | Should Be 1
+        $gate[0].LineNumber -lt $bcd[0].LineNumber | Should Be $true
+        # WinPE has no PowerShell
+        ($lines -join "`n") -match '(?im)^\s*powershell' | Should Be $false
     }
     It 'keeps the tablet helper parseable and free of PowerShell 5-only syntax (Windows 8.1 has 4.0)' {
         $file = Join-Path $payload 'windows\Stream7-Check.ps1'

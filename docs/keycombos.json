@@ -1,0 +1,104 @@
+{
+  "_comment": "Lazarus7 (c) 2026 lance6x5, MIT. Button combos for Android HP Slate 7 tablets. Read by src/Lazarus7.Android.psm1 and docs/index.html. confidence: hp = HP Support Community / HP docs; reported = third-party guides or forum reports; generic = standard Android or chip-family behaviour, not confirmed on this model. Keep ASCII.",
+  "confidenceLabels": {
+    "hp": "HP-confirmed",
+    "reported": "reported by owners",
+    "generic": "generic - unverified on this model"
+  },
+  "models": [
+    {
+      "key": "2800",
+      "name": "HP Slate 7 (2800)",
+      "chip": "Rockchip RK3066",
+      "combos": [
+        { "action": "Recovery mode", "confidence": "hp",
+          "keys": "Tablet off: hold Vol- + Vol+ + Power together; release when the HP logo appears.",
+          "notes": "If that boots normally, try Power + Vol+ only." },
+        { "action": "Loader mode (Rockchip flashing)", "confidence": "reported",
+          "keys": "Tablet off: hold Vol+ and plug the USB cable into the PC; keep holding about 5 s.",
+          "notes": "PC should show a Rockchip device (USB VID 2207). Needs Rockchip DriverAssistant." },
+        { "action": "Factory reset", "confidence": "hp",
+          "keys": "Recovery mode -> wipe data/factory reset -> Yes.",
+          "notes": "Erases everything. A Google account lock (FRP) may apply afterwards." }
+      ]
+    },
+    {
+      "key": "extreme",
+      "name": "HP Slate 7 Extreme (4400 / 4450)",
+      "chip": "NVIDIA Tegra 4",
+      "combos": [
+        { "action": "Recovery / boot menu", "confidence": "reported",
+          "keys": "Tablet off: hold Vol+ + Power; release when the HP logo appears.",
+          "notes": "Opens the bootloader menu; choose recovery from it." },
+        { "action": "Fastboot", "confidence": "reported",
+          "keys": "Boot menu (above) -> Vol- once -> Power to pick \"Fastboot protocol\".",
+          "notes": "If fastboot finds nothing, use the HP vendor ID: fastboot -i 0x03F0 devices" },
+        { "action": "APX mode (NVIDIA USB recovery)", "confidence": "generic",
+          "keys": "Tablet off: hold Vol+, press Power, then release Vol+ right away.",
+          "notes": "Owners report landing in APX by also pressing Vol- during the recovery combo. Restoring from APX needs HP-signed images. To leave APX: hold Power 10+ s." }
+      ]
+    },
+    {
+      "key": "plus",
+      "name": "HP Slate 7 Plus (4200)",
+      "chip": "NVIDIA Tegra 4",
+      "combos": [
+        { "action": "Recovery / boot menu", "confidence": "reported",
+          "keys": "Tablet off: hold Vol+ + Power; release as soon as the HP logo appears." },
+        { "action": "Fastboot", "confidence": "generic",
+          "keys": "Boot menu -> Vol- to \"Fastboot protocol\" -> Power.",
+          "notes": "Same Tegra 4 bootloader as the Extreme. Try fastboot -i 0x03F0 devices." },
+        { "action": "APX mode (NVIDIA USB recovery)", "confidence": "generic",
+          "keys": "Tablet off: hold Vol+, press Power, then release Vol+ right away.",
+          "notes": "Restoring from APX needs HP-signed images. To leave APX: hold Power 10+ s." }
+      ]
+    },
+    {
+      "key": "4601",
+      "name": "HP Slate 7 (4600 / 4601)",
+      "chip": "",
+      "combos": [
+        { "action": "Recovery mode", "confidence": "reported",
+          "keys": "Tablet off: hold Vol+ + Vol- + Power together; release at the HP logo." }
+      ]
+    },
+    {
+      "key": "voicetab",
+      "name": "HP Slate 7 VoiceTab",
+      "chip": "Marvell PXA1088",
+      "combos": [
+        { "action": "Recovery mode", "confidence": "hp",
+          "keys": "Tablet off: hold Power + Vol+ until the HP logo appears and the tablet vibrates.",
+          "notes": "The recovery menu shows a few seconds after the logo." },
+        { "action": "Factory reset", "confidence": "hp",
+          "keys": "Recovery mode -> Vol- to \"Wipe data/factory reset\" -> Power -> \"Yes -- delete all user data\" -> Power.",
+          "notes": "Then \"reboot system now\". A Google account lock (FRP) may apply afterwards." }
+      ]
+    },
+    {
+      "key": "hd",
+      "name": "HP Slate 7 HD",
+      "chip": "Marvell",
+      "combos": [
+        { "action": "Recovery mode", "confidence": "generic",
+          "keys": "Tablet off: try Power + Vol+ first; if it boots normally, try Vol+ + Vol- + Power.",
+          "notes": "No model-specific report found - these are the two combos the other Slate 7s use." }
+      ]
+    }
+  ],
+  "common": [
+    { "action": "Move / select in recovery", "confidence": "hp",
+      "keys": "Vol+ / Vol- to move, Power to select. Touch does not work in recovery." },
+    { "action": "\"No command\" screen (Android lying down)", "confidence": "generic",
+      "keys": "Hold Power, tap Vol+ once, release both - the recovery menu appears." },
+    { "action": "Force restart / power off when frozen", "confidence": "generic",
+      "keys": "Hold Power 10-15 s." },
+    { "action": "Safe mode (third-party apps off)", "confidence": "generic",
+      "keys": "Hold Power -> long-press \"Power off\" -> OK. Restart normally to leave." },
+    { "action": "Screenshot", "confidence": "generic",
+      "keys": "Power + Vol- together, about 1 s." },
+    { "action": "Reboot from a PC (USB debugging on)", "confidence": "generic",
+      "keys": "adb reboot recovery   |   adb reboot bootloader   |   adb reboot",
+      "notes": "Lazarus7 > Other HP tablets has these as menu items." }
+  ]
+}

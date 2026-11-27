@@ -5,6 +5,20 @@ and versions follow [Semantic Versioning](https://semver.org/).
 The release workflow publishes the matching section below as each GitHub release's notes, and the
 [website](https://lance6x5.github.io/Lazarus7/#changelog) shows it too.
 
+## [1.5.0] - 2026-11-27
+
+### Added
+- **Slate 7 button combos** for each model (2800, Extreme, Plus, 4600/4601, VoiceTab, HD): recovery, fastboot,
+  Rockchip loader / Tegra APX, factory reset, plus force-restart, safe mode, screenshot and `adb reboot` for all models.
+  Each combo is labelled HP-confirmed, reported by owners, or generic. They're shown in Lazarus7 → Other HP tablets →
+  Button combos and on the website, both read from `docs/keycombos.json`.
+- **`Stream7-Repair.cmd`**, run from a Windows setup stick's Command Prompt (WinPE). For 0xc0000225 and black-screen
+  boots, it lists the partitions and finds Windows (or flags BitLocker). It checks the WIMBoot links and the EFI/BCD
+  boot files, and offers a read-only `chkdsk`. It rebuilds boot files with `bcdboot` only after you type `REPAIR`.
+  Everything is logged to the stick.
+- Diagnose: new Stream 7 symptoms **"HP logo, then a blank black screen"** and **"Error 0xc0000225"**, each with a
+  step-by-step path. Boot loop is now its own entry.
+
 ## [1.4.0] - 2026-11-27
 
 ### Added
@@ -67,6 +81,7 @@ The release workflow publishes the matching section below as each GitHub release
 - Android tools: adb/fastboot (Google signature verified), sideload, flash, and the Rockchip flasher flow.
 - Dry-run mode, typed confirmations before destructive steps, Pester tests, field guide.
 
+[1.5.0]: https://github.com/lance6x5/Lazarus7/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/lance6x5/Lazarus7/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/lance6x5/Lazarus7/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/lance6x5/Lazarus7/compare/v1.1.0...v1.2.0

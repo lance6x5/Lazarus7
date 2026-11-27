@@ -3,6 +3,34 @@
 #
 # Android HP Slate 7 recovery: ADB / fastboot wrappers and the Rockchip flash flow.
 
+# Button combos live in docs/keycombos.json, shared with the website.
+$script:KeyCombos = [IO.File]::ReadAllText((Join-Path (Split-Path $PSScriptRoot) 'docs\keycombos.json'), [Text.Encoding]::UTF8) | ConvertFrom-Json
+
+function Get-L7KeyComboModels { $script:KeyCombos.models }
+function Get-L7CommonKeyCombos { $script:KeyCombos.common }
+
+function Write-L7Combo {
+    param($Combo)
+    $label = $script:KeyCombos.confidenceLabels.($Combo.confidence)
+    Write-Host ("   {0}" -f $Combo.action) -ForegroundColor White -NoNewline
+    Write-Host ("  [{0}]" -f $label) -ForegroundColor $(if ($Combo.confidence -eq 'hp') { 'Green' } elseif ($Combo.confidence -eq 'reported') { 'Yellow' } else { 'DarkGray' })
+    Write-L7Info $Combo.keys
+    if ($Combo.notes) { Write-L7Info ("-> " + $Combo.notes) }
+}
+
+function Show-L7KeyCombos {
+    $models = @(Get-L7KeyComboModels)
+    $key = Read-L7Menu -Title 'Button combos - which Slate 7? (model number is on the back)' -Items @($models | ForEach-Object {
+        @{ Key = $_.key; Label = $_.name; Hint = $_.chip } })
+    if (-not $key) { return }
+    $m = $models | Where-Object { $_.key -eq $key }
+    Write-L7Section ("{0}{1}" -f $m.name, $(if ($m.chip) { " - $($m.chip)" } else { '' }))
+    foreach ($c in $m.combos) { Write-L7Combo $c; Write-Host '' }
+    Write-L7Section 'All Slate 7 models'
+    foreach ($c in Get-L7CommonKeyCombos) { Write-L7Combo $c; Write-Host '' }
+    Wait-L7Key
+}
+
 function Invoke-L7Tool {
     param([Parameter(Mandatory)][string]$Exe, [string[]]$Arguments, [switch]$DryRun)
     $line = "$(Split-Path -Leaf $Exe) $($Arguments -join ' ')"
@@ -61,6 +89,7 @@ function Invoke-L7AndroidWizard {
     param([Parameter(Mandatory)][string]$ToolsDir, [switch]$DryRun)
     while ($true) {
         $choice = Read-L7Menu -Title 'Android HP Slate 7 - flash & recover' -Items @(
+            @{ Key = 'combos';     Label = 'Button combos for my model';        Hint = 'recovery, fastboot, loader/APX, reset, reboot' }
             @{ Key = 'devices';    Label = 'Show connected devices';            Hint = 'adb + fastboot' }
             @{ Key = 'recovery';   Label = 'Reboot to recovery';                Hint = 'needs a booting Android with USB debugging' }
             @{ Key = 'bootloader'; Label = 'Reboot to bootloader / fastboot' }
@@ -72,6 +101,7 @@ function Invoke-L7AndroidWizard {
         )
         if (-not $choice) { return }
 
+        if ($choice -eq 'combos') { Show-L7KeyCombos; continue }
         if ($choice -eq 'rockchip') { Invoke-L7RockchipFlow -ToolsDir $ToolsDir -DryRun:$DryRun; Wait-L7Key; continue }
         if ($choice -eq 'tegra') {
             Write-L7Section 'Tegra 4 notes'
@@ -123,4 +153,5 @@ function Invoke-L7AndroidWizard {
     }
 }
 
-Export-ModuleMember -Function Invoke-L7Tool, Invoke-L7RockchipFlow, Invoke-L7AndroidWizard
+Export-ModuleMember -Function Invoke-L7Tool, Invoke-L7RockchipFlow, Invoke-L7AndroidWizard,
+    Get-L7KeyComboModels, Get-L7CommonKeyCombos, Show-L7KeyCombos

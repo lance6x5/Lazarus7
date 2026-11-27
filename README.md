@@ -28,7 +28,7 @@ tablets get ADB, fastboot and Rockchip tools as a secondary path.
   | |___   / ___ \   / /_   / ___ \  |  _ <  | |_| |  ___) |   / /
   |_____| /_/   \_\ /____| /_/   \_\ |_| \_\  \___/  |____/   /_/
 
-  Raise your 7-inch HP tablet from the dead.   v1.4.0
+  Raise your 7-inch HP tablet from the dead.   v1.5.0
 ```
 
 ## 🌐 Run from the web
@@ -72,10 +72,10 @@ Nothing else to install: it runs on the Windows PowerShell 5.1 that every Window
 |---|---|
 | **Diagnose** | Which tablet, and what does it do? Covers Windows 8.1 cases like the Automatic Repair loop, BitLocker and a forgotten sign-in. Gives a concrete recommendation, then jumps to the right tool. |
 | **First aid** | Dead-battery revival, the startup menu (F2/F9/F10/F11), **Refresh vs Reset your PC**, and why you mustn't delete the WIMBoot partition. |
-| **Make a tablet toolkit USB** | Copies the tablet helpers onto any stick **without erasing it**. On the tablet, `Stream7-Check.cmd` saves a private report (serial, product number, firmware key, activation, WIMBoot, BitLocker). It can also turn off Fast Startup, start a **recovery drive** that copies the recovery partition, and install drivers. |
+| **Make a tablet toolkit USB** | Copies the tablet helpers onto any stick **without erasing it**. On the tablet, `Stream7-Check.cmd` saves a private report (serial, product number, firmware key, activation, WIMBoot, BitLocker). It can also turn off Fast Startup, start a **recovery drive** that copies the recovery partition, and install drivers. Every stick also carries `Stream7-Repair.cmd` for **0xc0000225** / black-screen boots, run from a Windows setup stick's Command Prompt. |
 | **Restore Windows** | From HP recovery media (factory 8.1 WIMBoot + drivers, recommended) or a Windows 10 x86 ISO, with honest activation and support warnings. It can add a Stream 7 drivers folder and splits `install.wim` over 4 GB with DISM. |
 | **Deploy Linux** | Downloads the latest **Debian 12 i386** netinst, **verifies SHA256**, writes a FAT32 stick and checks it has `EFI\BOOT\BOOTIA32.EFI`. It also adds the tablet-side tune-up script. |
-| **Identify a tablet over USB** / **Other HP tablets** | For Android Slate 7s: a read-only USB scan, plus Google platform-tools (signature-verified), `adb sideload`, `fastboot boot`/`flash` and the Rockchip flow. |
+| **Identify a tablet over USB** / **Other HP tablets** | For Android Slate 7s: **button combos per model** (recovery, fastboot, loader/APX, reset), a read-only USB scan, plus Google platform-tools (signature-verified), `adb sideload`, `fastboot boot`/`flash` and the Rockchip flow. |
 
 ### Safety rails
 - Only **USB-attached, non-boot, non-system** disks can be selected, and the disk is re-checked right before wiping.

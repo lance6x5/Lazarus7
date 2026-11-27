@@ -105,6 +105,21 @@
   .cl-ver ul { margin: 0; padding-left: 22px; } .cl-ver li { margin: 3px 0; }
   .cl-ver code { color: var(--gold); font-size: 14px; }
 
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .tabs button { border: 1px solid var(--line); background: var(--panel2); color: var(--text); border-radius: 99px;
+                 padding: 6px 14px; cursor: pointer; font: inherit; font-size: 14px; }
+  .tabs button[aria-pressed="true"] { background: var(--fire); color: #1a0b03; border-color: transparent; font-weight: 700; }
+  .combo { border-top: 1px solid var(--line); padding: 10px 0; }
+  .combo:first-child { border-top: 0; }
+  .combo .a { font-weight: 700; }
+  .combo .k { color: var(--gold); margin-top: 2px; }
+  .combo .nt { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .conf { font-size: 12px; border-radius: 99px; padding: 1px 8px; margin-left: 8px; border: 1px solid var(--line); font-weight: 400; }
+  .conf.hp { color: var(--ok); border-color: rgba(52,211,153,.4); }
+  .conf.reported { color: var(--orange); border-color: rgba(245,158,11,.4); }
+  .conf.generic { color: var(--dim); }
+  .cl-h { margin: 18px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+
   footer { padding: 30px 0 50px; color: var(--dim); font-size: 14px; border-top: 1px solid var(--line); text-align: center; }
 </style>
 </head>
@@ -112,7 +127,7 @@
 
 <nav><div class="wrap">
   <span class="brand">LAZARUS7</span>
-  <a class="ver" id="navVer" href="#changelog">v1.4.0</a>
+  <a class="ver" id="navVer" href="#changelog">v1.5.0</a>
   <a href="#launch">Launch</a>
   <a href="#diagnose">Diagnose</a>
   <a href="#identify">Android scan</a>
@@ -128,8 +143,8 @@
     <b>Windows 8.1 with Bing</b>. Back up its WIMBoot Windows, restore factory 8.1, or give it a second life on Debian.
     Diagnose right here in your browser, then launch the full tool with one line.</p>
   <!-- Static values are the fallback; the script below refreshes them from the GitHub API. -->
-  <div class="relinfo" id="relinfo" data-version="1.4.0">
-    <a class="chip" id="chipVer" href="https://github.com/lance6x5/Lazarus7/releases/latest">Latest release <b>v1.4.0</b></a>
+  <div class="relinfo" id="relinfo" data-version="1.5.0">
+    <a class="chip" id="chipVer" href="https://github.com/lance6x5/Lazarus7/releases/latest">Latest release <b>v1.5.0</b></a>
     <span class="chip" id="chipRel">Released <b>2026-11-27</b></span>
     <a class="chip" id="chipSite" href="https://github.com/lance6x5/Lazarus7/commits/main/docs">Site updated <b>-</b></a>
   </div>
@@ -163,6 +178,13 @@
     <div class="usbres" id="usbres"></div>
     <p class="note" style="margin-bottom:0">An <b>HP Stream 7</b> never shows up on a PC (its port is charge + OTG host only), so
       no result is normal for it. For Android Slates, try the key combos below while plugging in.</p>
+  </div>
+  <h3 style="margin:26px 0 6px">Slate 7 button combos</h3>
+  <p class="sub">Recovery, fastboot, loader/APX, factory reset and reboot. Pick your model; the number is on the back.
+    Each combo shows how well it's confirmed.</p>
+  <div class="card">
+    <div class="tabs" id="comboTabs" role="group" aria-label="Slate 7 model"></div>
+    <div id="comboList" aria-live="polite"><span class="note">Loading...</span></div>
   </div>
 </section>
 
@@ -202,7 +224,8 @@
       <dd>micro-USB OTG adapter, a <b>powered</b> USB hub, USB keyboard (+ mouse: touch doesn't work in Windows Setup),
         two 8 GB+ USB sticks.</dd>
       <dt>Android Slate 7 instead?</dt>
-      <dd>Recovery: <kbd>Power</kbd> + <kbd>Vol+</kbd>. Rockchip loader: hold <kbd>Vol+</kbd> while plugging in USB.</dd>
+      <dd>Recovery: <kbd>Power</kbd> + <kbd>Vol+</kbd>. Rockchip loader: hold <kbd>Vol+</kbd> while plugging in USB.
+        <a href="#identify">All combos by model</a>.</dd>
     </dl></div>
   </div>
 </section>
@@ -471,6 +494,31 @@ fetch('https://raw.githubusercontent.com/' + REPO + '/main/CHANGELOG.md')
     box.appendChild(el('span', { 'class': 'note' }, [document.createTextNode('Could not load the changelog. '),
       el('a', { href: 'https://github.com/' + REPO + '/blob/main/CHANGELOG.md', text: 'Read it on GitHub' })]));
   });
+
+// ---- Slate 7 button combos (docs/keycombos.json, shared with the desktop tool)
+function comboNode(c, labels) {
+  return el('div', { 'class': 'combo' }, [
+    el('div', { 'class': 'a', text: c.action }, [el('span', { 'class': 'conf ' + c.confidence, text: labels[c.confidence] || c.confidence })]),
+    el('div', { 'class': 'k', text: c.keys })
+  ].concat(c.notes ? [el('div', { 'class': 'nt', text: c.notes })] : []));
+}
+function renderCombos(data, key) {
+  var tabs = document.getElementById('comboTabs'), list = document.getElementById('comboList');
+  tabs.innerHTML = ''; list.innerHTML = '';
+  data.models.forEach(function (m) {
+    tabs.appendChild(el('button', { type: 'button', 'aria-pressed': String(m.key === key), text: m.name.replace('HP Slate 7 ', '').replace(/[()]/g, '') || m.name,
+                                    title: m.name + (m.chip ? ' - ' + m.chip : ''), on: function () { renderCombos(data, m.key); } }));
+  });
+  var model = data.models.filter(function (m) { return m.key === key; })[0];
+  list.appendChild(el('div', { 'class': 'cl-h', text: model.name + (model.chip ? ' - ' + model.chip : '') }));
+  model.combos.forEach(function (c) { list.appendChild(comboNode(c, data.confidenceLabels)); });
+  list.appendChild(el('div', { 'class': 'cl-h', text: 'All Slate 7 models' }));
+  data.common.forEach(function (c) { list.appendChild(comboNode(c, data.confidenceLabels)); });
+}
+fetch('keycombos.json')
+  .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function (d) { renderCombos(d, d.models[0].key); })
+  .catch(function () { document.getElementById('comboList').textContent = 'Could not load the button combos.'; });
 
 window.L7 = { parseChangelog: parseChangelog, renderChangelog: renderChangelog };
 </script>
