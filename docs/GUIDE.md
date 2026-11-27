@@ -3,6 +3,11 @@
 The manual version of everything the Lazarus7 tool automates, for the **HP Stream 7** that shipped with
 **Windows 8.1 with Bing**. Useful when you want to understand a step or do it by hand.
 
+> **Use at your own risk.** This guide is for information and help only, provided "as is" without warranty. Recovering,
+> flashing or reinstalling a device can erase your data, make it unusable or void its warranty, and some steps here
+> come from unconfirmed community reports. The authors are not liable for any damage or loss. Back up first. See
+> [DISCLAIMER.md](../DISCLAIMER.md).
+
 ## 0. Know your tablet
 
 | Spec | HP Stream 7 (label `TSW 7H`) |

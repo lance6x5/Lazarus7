@@ -33,6 +33,7 @@ while [ $# -gt 0 ]; do
 done
 case "$ROTATE" in normal|left|right|inverted) ;; *) echo "--rotate must be normal, left, right or inverted" >&2; exit 2 ;; esac
 
+echo "Lazarus7: for help only - use at your own risk, no warranty, no liability (DISCLAIMER.md)."
 if [ "$(id -u)" -ne 0 ]; then
     echo "Run as root (sudo)." >&2
     exit 1

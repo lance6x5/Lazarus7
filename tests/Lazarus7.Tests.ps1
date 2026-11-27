@@ -180,6 +180,40 @@ Describe 'Other operating systems' {
     }
 }
 
+Describe 'Disclaimer' {
+    $root = Split-Path $PSScriptRoot
+    It 'exists and states no warranty, own risk and no liability' {
+        $d = [IO.File]::ReadAllText((Join-Path $root 'DISCLAIMER.md'))
+        $d -match 'without warranty' | Should Be $true
+        $d -match 'at your own risk' | Should Be $true
+        $d -match 'not liable' | Should Be $true
+    }
+    It 'is linked from the README, the website, the guide and the NOTICE' {
+        foreach ($f in 'README.md', 'docs\index.html', 'docs\GUIDE.md', 'NOTICE.md') {
+            [IO.File]::ReadAllText((Join-Path $root $f)) -match 'DISCLAIMER\.md' | Should Be $true
+        }
+    }
+    It 'is announced by every tablet-side script' {
+        foreach ($f in 'payload\windows\Stream7-Check.ps1', 'payload\windows\Stream7-Repair.cmd',
+                       'payload\linux\stream7-debian-postinstall.sh', 'payload\linux\stream7-media-center.sh') {
+            [IO.File]::ReadAllText((Join-Path $root $f)) -match 'own risk' | Should Be $true
+        }
+    }
+    It 'is asked for once, then remembered by revision' {
+        $marker = Join-Path $TestDrive 'Lazarus7\disclaimer-accepted.txt'
+        Test-L7DisclaimerAccepted -MarkerPath $marker | Should Be $false
+        New-Item -ItemType Directory -Force (Split-Path $marker) | Out-Null
+        Set-Content $marker 'revision=0'
+        Test-L7DisclaimerAccepted -MarkerPath $marker | Should Be $false   # older wording -> ask again
+        Set-Content $marker @('revision=1', 'accepted=now')
+        Test-L7DisclaimerAccepted -MarkerPath $marker | Should Be $true
+        Confirm-L7Disclaimer -MarkerPath $marker | Should Be $true          # accepted: no prompt
+    }
+    It 'gates the main menu' {
+        [IO.File]::ReadAllText((Join-Path $root 'Lazarus7.ps1')) -match 'if \(-not \(Confirm-L7Disclaimer\)\)' | Should Be $true
+    }
+}
+
 Describe 'Tablet payload' {
     $payload = Join-Path (Split-Path $PSScriptRoot) 'payload'
     It 'ships the Windows helper and the Linux post-install script' {

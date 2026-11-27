@@ -97,6 +97,7 @@ function Invoke-InstallDrivers {
 Clear-Host
 Write-Host ''
 Write-Host '  LAZARUS7 :: HP Stream 7 check & backup' -ForegroundColor DarkYellow
+Write-Host '  For help only - use at your own risk, no warranty, no liability (DISCLAIMER.md).' -ForegroundColor DarkGray
 Write-Host ''
 Say 'Collecting facts...' Cyan
 $facts = Get-Stream7Facts

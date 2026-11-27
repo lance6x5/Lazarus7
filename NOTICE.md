@@ -5,9 +5,11 @@
 - It is **not affiliated with, endorsed by, or supported by HP Inc.** "HP", "Stream" and "Slate" are trademarks
   of HP Inc. and are used here only to identify the hardware the tool works with.
 - Debian is a registered trademark of Software in the Public Interest, Inc. Android is a trademark of Google LLC.
-  Rockchip and NVIDIA Tegra are trademarks of their respective owners.
+  Kodi is a trademark of the XBMC Foundation. Windows is a trademark of Microsoft Corporation. Rockchip and NVIDIA
+  Tegra are trademarks of their respective owners. Android-x86 is an independent open-source project.
 - Lazarus7 does **not** bundle any firmware, operating system images or vendor tools. It downloads Debian from
-  cdimage.debian.org (SHA256-verified) and Android platform-tools from Google (Authenticode-verified). Everything
-  else you supply yourself.
+  cdimage.debian.org (SHA256-verified), Android-x86 from SourceForge (SHA-1 and MD5 verified against two published
+  sources), and Android platform-tools from Google (Authenticode-verified). Kodi is installed from Debian's own
+  archive on the tablet. Everything else you supply yourself.
 - Flashing firmware and erasing disks can make things worse. Lazarus7 asks before every destructive step, but you
-  use it at your own risk (see the warranty disclaimer in the license).
+  use it at your own risk. See [DISCLAIMER.md](DISCLAIMER.md) and the warranty disclaimer in the [license](LICENSE).

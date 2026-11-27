@@ -19,6 +19,7 @@ if not exist "%HERE%..\reports" mkdir "%HERE%..\reports" >nul 2>&1
 
 echo.
 echo   LAZARUS7 :: HP Stream 7 boot repair (Windows PE)
+echo   For help only - use at your own risk, no warranty, no liability (DISCLAIMER.md).
 echo   Log: %LOG%
 echo.
 echo Lazarus7 Stream 7 boot repair log> "%LOG%"

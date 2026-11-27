@@ -4,7 +4,7 @@
 # Console UI: banner, menus, prompts, file pickers. Plain ASCII on purpose so it
 # renders correctly in the stock Windows PowerShell 5.1 console.
 
-$script:Lazarus7Version = '1.7.0'
+$script:Lazarus7Version = '1.7.1'
 
 # figlet "standard"-style glyphs, rendered by Show-Lazarus7Banner so that the
 # columns always line up.
@@ -42,10 +42,53 @@ function Show-Lazarus7Banner {
     Write-Host '  Raise your 7-inch HP tablet from the dead.' -ForegroundColor Gray -NoNewline
     Write-Host ("   v$script:Lazarus7Version") -ForegroundColor DarkGray
     Write-Host '  Built for the HP Stream 7 (TSW 7H, Windows 8.1)  |  + Android Slate 7' -ForegroundColor DarkGray
+    Write-Host '  For help and information only - use at your own risk, no warranty (DISCLAIMER.md).' -ForegroundColor DarkYellow
     if ($DryRun) {
         Write-Host '  [DRY RUN] No disks will be erased and nothing will be flashed.' -ForegroundColor Cyan
     }
     Write-Host ('  ' + ('-' * 62)) -ForegroundColor DarkGray
+}
+
+# ---- Disclaimer acknowledgement ---------------------------------------------
+# Shown once per machine (and again whenever the wording below changes).
+$script:DisclaimerRevision = 1
+$script:DisclaimerLines = @(
+    'Lazarus7 is provided for information and help only, "as is", WITHOUT WARRANTY.'
+    'You use it - the tool, scripts, guide, button combos and advice - ENTIRELY AT YOUR OWN RISK.'
+    ''
+    'Recovering, flashing or reinstalling a device can permanently ERASE DATA, make the device'
+    'UNUSABLE ("brick" it), or void its warranty. Some advice comes from unconfirmed community reports.'
+    ''
+    'To the fullest extent permitted by law, the authors and contributors are NOT LIABLE for any'
+    'damage, data loss, device failure or other harm arising from its use. Back up first.'
+    'Not affiliated with HP, Microsoft, Google, Debian, Android-x86 or Kodi. Full text: DISCLAIMER.md'
+)
+
+function Get-L7DisclaimerMarkerPath {
+    Join-Path $env:LOCALAPPDATA 'Lazarus7\disclaimer-accepted.txt'
+}
+
+function Test-L7DisclaimerAccepted {
+    param([string]$MarkerPath = (Get-L7DisclaimerMarkerPath))
+    if (-not (Test-Path -LiteralPath $MarkerPath)) { return $false }
+    $first = Get-Content -LiteralPath $MarkerPath -TotalCount 1
+    return ($first -eq "revision=$script:DisclaimerRevision")
+}
+
+<#
+  Returns $true once the user has accepted. Declining returns $false (the caller exits).
+#>
+function Confirm-L7Disclaimer {
+    param([string]$MarkerPath = (Get-L7DisclaimerMarkerPath))
+    if (Test-L7DisclaimerAccepted -MarkerPath $MarkerPath) { return $true }
+    Write-L7Section 'Before you start: use at your own risk'
+    foreach ($l in $script:DisclaimerLines) { Write-Host "   $l" -ForegroundColor White }
+    Write-Host ''
+    if (-not (Read-L7YesNo 'Do you understand and accept this?')) { return $false }
+    $dir = Split-Path -Parent $MarkerPath
+    if (-not (Test-Path -LiteralPath $dir)) { $null = New-Item -ItemType Directory -Force $dir }
+    Set-Content -LiteralPath $MarkerPath -Value @("revision=$script:DisclaimerRevision", "accepted=$((Get-Date).ToString('o'))", "version=$script:Lazarus7Version") -Encoding ASCII
+    return $true
 }
 
 function Write-L7Step   { param([string]$Text) Write-Host "  >> $Text" -ForegroundColor Cyan }

@@ -218,6 +218,12 @@ function Invoke-L7Action {
     }
 }
 
+Show-Lazarus7Banner -DryRun:$DryRun
+if (-not (Confirm-L7Disclaimer)) {
+    Write-Host "`n  No problem - nothing was changed. Lazarus7 will ask again next time.`n" -ForegroundColor DarkYellow
+    return
+}
+
 while ($true) {
     Show-Lazarus7Banner -DryRun:$DryRun
     $choice = Read-L7Menu -Title 'Main menu' -BackLabel 'Quit' -Items @(

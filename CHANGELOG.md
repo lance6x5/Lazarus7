@@ -5,6 +5,17 @@ and versions follow [Semantic Versioning](https://semver.org/).
 The release workflow publishes the matching section below as each GitHub release's notes, and the
 [website](https://lance6x5.github.io/Lazarus7/#changelog) shows it too.
 
+## [1.7.1] - 2026-11-27
+
+### Added
+- **DISCLAIMER.md**: for information and help only, provided "as is" without warranty, used at your own risk, and the
+  authors and contributors are not liable for damage or data loss.
+- The tool shows the disclaimer on first start and asks you to accept it. It's remembered per machine, and asked
+  again if the wording changes. Declining exits without changing anything.
+- A disclaimer notice on the website (under the header and in the footer), at the top of the README and the guide,
+  in NOTICE.md, in the tool's banner, and in every tablet-side script. DISCLAIMER.md is copied onto every Lazarus7
+  stick.
+
 ## [1.7.0] - 2026-11-27
 
 ### Added
@@ -112,6 +123,7 @@ The release workflow publishes the matching section below as each GitHub release
 - Android tools: adb/fastboot (Google signature verified), sideload, flash, and the Rockchip flasher flow.
 - Dry-run mode, typed confirmations before destructive steps, Pester tests, field guide.
 
+[1.7.1]: https://github.com/lance6x5/Lazarus7/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/lance6x5/Lazarus7/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/lance6x5/Lazarus7/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/lance6x5/Lazarus7/compare/v1.4.0...v1.5.0

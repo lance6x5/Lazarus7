@@ -101,6 +101,14 @@ function Copy-L7Tree {
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed (exit $LASTEXITCODE)" }
 }
 
+# The tablet-side scripts point at DISCLAIMER.md, so it travels with them on every stick.
+function Copy-L7Disclaimer {
+    param([Parameter(Mandatory)][string]$PayloadDir, [Parameter(Mandatory)][string]$UsbRoot, [switch]$DryRun)
+    $src = Join-Path (Split-Path -Parent $PayloadDir) 'DISCLAIMER.md'
+    if ($DryRun -or -not (Test-Path -LiteralPath $src)) { return }
+    Copy-Item -LiteralPath $src -Destination (Join-Path $UsbRoot 'lazarus7\DISCLAIMER.md') -Force
+}
+
 function Get-L7RemovableVolume {
     Get-Volume | Where-Object { $_.DriveType -eq 'Removable' -and $_.DriveLetter -and $_.FileSystem }
 }
@@ -249,6 +257,7 @@ function Invoke-L7ToolkitUsb {
     $letter = $vol.DriveLetter
     $root = "${letter}:\"
     Copy-L7Tree -From $PayloadDir -To (Join-Path $root 'lazarus7') -DryRun:$DryRun
+    Copy-L7Disclaimer -PayloadDir $PayloadDir -UsbRoot $root -DryRun:$DryRun
     if ($DriversDir) { Copy-L7Tree -From $DriversDir -To (Join-Path $root 'Drivers') -DryRun:$DryRun }
     Write-L7Ok "Toolkit on ${letter}:\lazarus7\"
     Write-L7Section 'Now on the Stream 7 (Windows 8.1 must still boot)'
@@ -331,6 +340,7 @@ function Invoke-L7BuildUsb {
             }
         }
         Copy-L7Tree -From $PayloadDir -To (Join-Path $dest 'lazarus7') -DryRun:$DryRun
+        Copy-L7Disclaimer -PayloadDir $PayloadDir -UsbRoot $dest -DryRun:$DryRun
         Write-L7Ok 'Added the Lazarus7 tablet helpers under \lazarus7\.'
         if ($DriversDir) {
             Copy-L7Tree -From $DriversDir -To (Join-Path $dest 'Drivers') -DryRun:$DryRun

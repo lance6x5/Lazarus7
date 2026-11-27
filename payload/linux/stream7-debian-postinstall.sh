@@ -16,6 +16,7 @@ set -eu
 APPLY_BACKLIGHT_FIX=0
 [ "${1:-}" = "--backlight" ] && APPLY_BACKLIGHT_FIX=1
 
+echo "Lazarus7: for help only - use at your own risk, no warranty, no liability (DISCLAIMER.md)."
 if [ "$(id -u)" -ne 0 ]; then
     echo "Run as root (sudo)." >&2
     exit 1

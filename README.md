@@ -28,8 +28,13 @@ tablets get ADB, fastboot and Rockchip tools as a secondary path.
   | |___   / ___ \   / /_   / ___ \  |  _ <  | |_| |  ___) |   / /
   |_____| /_/   \_\ /____| /_/   \_\ |_| \_\  \___/  |____/   /_/
 
-  Raise your 7-inch HP tablet from the dead.   v1.7.0
+  Raise your 7-inch HP tablet from the dead.   v1.7.1
 ```
+
+> [!WARNING]
+> **For help and information only - use at your own risk.** Lazarus7 is provided "as is", without warranty. Recovering,
+> flashing or reinstalling a device can erase data, brick it, or void its warranty. The authors and contributors are
+> **not liable** for any damage or loss. Back up first, and read the full [DISCLAIMER.md](DISCLAIMER.md).
 
 ## 🌐 Run from the web
 
@@ -137,4 +142,4 @@ Pull requests are welcome. Run `Invoke-Pester .\tests` before opening one.
 ## License
 
 [MIT](LICENSE) © 2026 lance6x5. Lazarus7 is an independent project, **not affiliated with HP Inc.**
-See [NOTICE.md](NOTICE.md) for trademarks and disclaimers.
+See [DISCLAIMER.md](DISCLAIMER.md) (use at your own risk, no liability) and [NOTICE.md](NOTICE.md) (trademarks).
