@@ -16,7 +16,7 @@ jobs:
   test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # Tests target the Pester 3.4.0 that ships inside Windows (no install needed),
       # while the runner defaults to Pester 5. Pin the inbox version.
       - name: Pester
@@ -30,7 +30,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Check version and extract release notes from CHANGELOG.md
         run: |
           tag="${GITHUB_REF_NAME#v}"
