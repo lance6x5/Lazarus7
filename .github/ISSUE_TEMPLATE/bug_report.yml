@@ -1,0 +1,84 @@
+name: Bug report
+description: Something in Lazarus7 went wrong or gave wrong advice.
+title: "[Bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping fix Lazarus7.
+        **Privacy:** don't paste your Windows product key or serial number. The `Stream7-Check` report contains both,
+        so delete those lines before sharing it.
+  - type: input
+    id: version
+    attributes:
+      label: Lazarus7 version
+      description: Shown in the banner (for example v1.6.0). The "Report a problem" menu fills this in.
+      placeholder: v1.6.0
+    validations:
+      required: true
+  - type: dropdown
+    id: tablet
+    attributes:
+      label: Tablet
+      options:
+        - HP Stream 7 (5701 / TSW 7H)
+        - HP Stream 7 (5709)
+        - HP Stream 7 (other / not sure)
+        - HP Slate 7 2800
+        - HP Slate 7 Extreme
+        - HP Slate 7 Plus
+        - HP Slate 7 4600 / 4601
+        - HP Slate 7 VoiceTab
+        - HP Slate 7 HD
+        - Other / not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where did it happen?
+      options:
+        - Desktop tool (Lazarus7.cmd)
+        - Web launcher (irm ... run.ps1)
+        - Website (Diagnose / combos / changelog)
+        - Stream7-Check (on the tablet, Windows)
+        - Stream7-Repair (Windows setup stick, Command Prompt)
+        - Debian post-install script (on the tablet)
+        - Documentation / guide
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you saw, including exact error messages or codes (for example 0xc0000225).
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Main menu -> Restore Windows
+        2. ...
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+  - type: textarea
+    id: context
+    attributes:
+      label: Diagnosis path / context
+      description: The website and tool fill this in when you report from a Diagnose result.
+  - type: input
+    id: pc_os
+    attributes:
+      label: PC operating system
+      placeholder: Windows 11 23H2
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or console output
+      description: For example the Stream7-Repair log from \lazarus7\reports. Remove product keys and serials first.
+      render: text

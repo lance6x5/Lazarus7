@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest an enhancement, a new tablet, or a new OS to support.
+title: "[Feature] "
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      placeholder: When my tablet does X, Lazarus7 can't help because ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like Lazarus7 to do?
+    validations:
+      required: true
+  - type: dropdown
+    id: tablet
+    attributes:
+      label: Which tablet is this for?
+      options:
+        - HP Stream 7
+        - HP Slate 7 (any Android model)
+        - Another HP tablet
+        - Not tablet-specific
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds you use today
+  - type: input
+    id: version
+    attributes:
+      label: Lazarus7 version (if you use it)
+      placeholder: v1.6.0

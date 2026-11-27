@@ -28,7 +28,7 @@ tablets get ADB, fastboot and Rockchip tools as a secondary path.
   | |___   / ___ \   / /_   / ___ \  |  _ <  | |_| |  ___) |   / /
   |_____| /_/   \_\ /____| /_/   \_\ |_| \_\  \___/  |____/   /_/
 
-  Raise your 7-inch HP tablet from the dead.   v1.5.0
+  Raise your 7-inch HP tablet from the dead.   v1.6.0
 ```
 
 ## 🌐 Run from the web
@@ -118,10 +118,21 @@ refuses a tag that doesn't match the code. It runs the tests and publishes the z
 that changelog section as the release notes. The website shows the latest version, its release date, when the
 site was last updated, and the full changelog.
 
+## Report a problem or request a feature
+
+Use GitHub Issues. The forms ask the right questions, and each issue arrives labelled for triage:
+
+- **[Report a problem](https://github.com/lance6x5/Lazarus7/issues/new?template=bug_report.yml)**: wrong advice, an error, a crash
+- **[Request a feature](https://github.com/lance6x5/Lazarus7/issues/new?template=feature_request.yml)**: a new tablet, a new OS, a better way
+- **[Tell us what worked](https://github.com/lance6x5/Lazarus7/issues/new?template=device_report.yml)**: real-hardware results, which turn "generic" button combos into confirmed ones
+
+You can also file from inside the tool (**Report a problem / request a feature**, which pre-fills your version and PC OS)
+or from any Diagnose result on the website (which pre-fills the diagnosis path). You'll need a free GitHub account.
+**Never paste your Windows product key or serial number**: the Stream7-Check report contains both.
+
 ## Contributing
 
-Issues and PRs are welcome, especially reports from real hardware (which sub-model, what worked, what didn't).
-Run `Invoke-Pester .\tests` before opening a PR.
+Pull requests are welcome. Run `Invoke-Pester .\tests` before opening one.
 
 ## License
 

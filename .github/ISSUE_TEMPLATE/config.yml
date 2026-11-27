@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Lazarus7 website (Diagnose, button combos, guide)
+    url: https://lance6x5.github.io/Lazarus7/
+    about: Most "how do I..." questions are answered by the Diagnose wizard and the field guide.
+  - name: HP Support (recovery media, BIOS password unlock, warranty)
+    url: https://support.hp.com/us-en/contact
+    about: Lazarus7 is not affiliated with HP. Only HP can supply recovery media or BIOS unlock codes.

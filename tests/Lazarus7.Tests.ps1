@@ -5,7 +5,7 @@
 #   Invoke-Pester .\tests
 
 $src = Join-Path (Split-Path $PSScriptRoot) 'src'
-foreach ($m in 'Ui', 'Detect', 'Triage', 'Download', 'Usb', 'Android') {
+foreach ($m in 'Ui', 'Detect', 'Triage', 'Download', 'Usb', 'Android', 'Feedback') {
     Import-Module (Join-Path $src "Lazarus7.$m.psm1") -Force -DisableNameChecking
 }
 
@@ -119,6 +119,33 @@ Describe 'Slate 7 button combos (docs/keycombos.json)' {
     It 'is what the desktop module serves' {
         @(Get-L7KeyComboModels).Count | Should Be @($data.models).Count
         @(Get-L7CommonKeyCombos).Count | Should Be @($data.common).Count
+    }
+}
+
+Describe 'Feedback and official links' {
+    $root = Split-Path $PSScriptRoot
+    It 'builds a pre-filled issue URL for each form, with encoded values' {
+        $u = Get-L7IssueUrl -Kind bug -Fields @{ version = 'v1.6.0'; pc_os = 'Windows 11 & more' }
+        $u | Should Be 'https://github.com/lance6x5/Lazarus7/issues/new?template=bug_report.yml&pc_os=Windows%2011%20%26%20more&version=v1.6.0'
+        Get-L7IssueUrl -Kind device | Should Be 'https://github.com/lance6x5/Lazarus7/issues/new?template=device_report.yml'
+    }
+    It 'points every form at a template that exists, and pre-fills only fields that exist in it' {
+        foreach ($kind in 'bug', 'feature', 'device') {
+            $url = Get-L7IssueUrl -Kind $kind -Fields @{ version = 'v1' }
+            $tpl = [regex]::Match($url, 'template=([^&]+)').Groups[1].Value
+            $yml = Join-Path $root ".github\ISSUE_TEMPLATE\$tpl"
+            Test-Path $yml | Should Be $true
+            [IO.File]::ReadAllText($yml) -match '(?m)^\s*id:\s*version\s*$' | Should Be $true
+        }
+        [IO.File]::ReadAllText((Join-Path $root '.github\ISSUE_TEMPLATE\bug_report.yml')) -match '(?m)^\s*id:\s*pc_os\s*$' | Should Be $true
+    }
+    It 'only links to official HP, Microsoft and Debian sites' {
+        foreach ($l in Get-L7OfficialLinks) {
+            $l.Url -match '^https://([a-z0-9-]+\.)*(hp\.com|microsoft\.com|debian\.org)/' | Should Be $true
+        }
+    }
+    It 'wires the report action into the main menu' {
+        [IO.File]::ReadAllText((Join-Path $root 'Lazarus7.ps1')) -match "'report'\s*\{\s*Invoke-L7FeedbackWizard" | Should Be $true
     }
 }
 

@@ -127,13 +127,14 @@
 
 <nav><div class="wrap">
   <span class="brand">LAZARUS7</span>
-  <a class="ver" id="navVer" href="#changelog">v1.5.0</a>
+  <a class="ver" id="navVer" href="#changelog">v1.6.0</a>
   <a href="#launch">Launch</a>
   <a href="#diagnose">Diagnose</a>
   <a href="#identify">Android scan</a>
   <a href="#firstaid">First aid</a>
   <a href="#os">Other OSes</a>
   <a href="#changelog">Changelog</a>
+  <a href="#feedback">Feedback</a>
   <a href="https://github.com/lance6x5/Lazarus7">GitHub</a>
 </div></nav>
 
@@ -143,8 +144,8 @@
     <b>Windows 8.1 with Bing</b>. Back up its WIMBoot Windows, restore factory 8.1, or give it a second life on Debian.
     Diagnose right here in your browser, then launch the full tool with one line.</p>
   <!-- Static values are the fallback; the script below refreshes them from the GitHub API. -->
-  <div class="relinfo" id="relinfo" data-version="1.5.0">
-    <a class="chip" id="chipVer" href="https://github.com/lance6x5/Lazarus7/releases/latest">Latest release <b>v1.5.0</b></a>
+  <div class="relinfo" id="relinfo" data-version="1.6.0">
+    <a class="chip" id="chipVer" href="https://github.com/lance6x5/Lazarus7/releases/latest">Latest release <b>v1.6.0</b></a>
     <span class="chip" id="chipRel">Released <b>2026-11-27</b></span>
     <a class="chip" id="chipSite" href="https://github.com/lance6x5/Lazarus7/commits/main/docs">Site updated <b>-</b></a>
   </div>
@@ -248,10 +249,35 @@
   </table>
   </div>
   <p class="note">Full manual walkthrough: <a href="https://github.com/lance6x5/Lazarus7/blob/main/docs/GUIDE.md">the field guide</a>.</p>
+  <h3 style="margin:26px 0 6px">Official downloads and support</h3>
+  <p class="sub">Official sources only. Lazarus7 doesn't host or link to copies of HP or Microsoft recovery images: they
+    can't be redistributed, and unofficial copies can't be verified.</p>
+  <div class="card"><dl>
+    <dt><a href="https://support.hp.com/us-en/contact">HP Support</a></dt>
+    <dd>Ask for Stream 7 recovery media with your serial and product number (Stream7-Check saves both). BIOS password unlock codes come from here too.</dd>
+    <dt><a href="https://support.hp.com/us-en/drivers/selfservice/hp-stream-tablets/7439994/model/7482041">HP Stream 7 Tablet 5701: drivers and software</a></dt>
+    <dd>Needed after a Windows 10 install: chipset/Driver Pack first, then Goodix touch, Realtek audio, Bluetooth, Kionix sensor.</dd>
+    <dt><a href="https://www.microsoft.com/en-us/software-download/windows10">Microsoft: Windows 10 download</a></dt>
+    <dd>Use the Media Creation Tool, choose <b>32-bit (x86)</b> and ISO, then build the stick with Lazarus7. The Windows 8.1 download page is gone.</dd>
+    <dt><a href="https://cdimage.debian.org/cdimage/archive/">Debian 12 i386 images</a></dt>
+    <dd>Lazarus7 fetches and verifies these itself.</dd>
+  </dl></div>
+</section>
+
+<section id="feedback">
+  <h2><span class="n">06</span>Report a problem or request a feature</h2>
+  <p class="sub">Reports go to GitHub Issues, where they're labelled and worked on. Needs a free GitHub account.
+    <b>Don't paste your product key or serial number.</b></p>
+  <div class="grid">
+    <a class="card btn" style="text-align:left" href="https://github.com/lance6x5/Lazarus7/issues/new?template=bug_report.yml"><b>Report a problem</b><br><span class="note">Wrong advice, an error, a crash</span></a>
+    <a class="card btn" style="text-align:left" href="https://github.com/lance6x5/Lazarus7/issues/new?template=feature_request.yml"><b>Request a feature</b><br><span class="note">A new tablet, a new OS, a better way</span></a>
+    <a class="card btn" style="text-align:left" href="https://github.com/lance6x5/Lazarus7/issues/new?template=device_report.yml"><b>Tell us what worked</b><br><span class="note">Confirms button combos and fixes for your model</span></a>
+  </div>
+  <p class="note"><a href="https://github.com/lance6x5/Lazarus7/issues">See open issues</a> before filing, in case yours is already there.</p>
 </section>
 
 <section id="changelog">
-  <h2><span class="n">06</span>Changelog</h2>
+  <h2><span class="n">07</span>Changelog</h2>
   <p class="sub">What changed in each release. Source:
     <a href="https://github.com/lance6x5/Lazarus7/blob/main/CHANGELOG.md">CHANGELOG.md</a>.</p>
   <div class="card" id="clog"><span class="note">Loading changelog...</span></div>
@@ -349,7 +375,25 @@ function stepResult() {
                               text: ANCHOR[r.action] ? 'Take me there' : 'Launch Lazarus7' }));
   }
   kids.push(row);
+  var ctx = 'Website Diagnose: ' + (plat ? plat.label : state.platform) +
+            (state.platform === 'Unknown' ? '' : ' / ' + symptomLabel(state.platform, state.symptom)) + ' -> "' + r.title + '"';
+  kids.push(el('p', { 'class': 'note' }, [document.createTextNode("Didn't solve it? "),
+    el('a', { href: issueUrl('bug_report.yml', { context: ctx, version: 'v' + SITE_VERSION }), text: 'Report it on GitHub' }),
+    document.createTextNode(' (the diagnosis path is filled in for you).')]));
   render([el('div', { 'class': 'rec' }, kids)]);
+}
+var SITE_VERSION = document.getElementById('relinfo').getAttribute('data-version');
+function symptomLabel(platform, key) {
+  var s = (TRIAGE.symptoms[platform] || []).filter(function (x) { return x.key === key; })[0];
+  return s ? s.label : key;
+}
+// Mirrors Get-L7IssueUrl in src/Lazarus7.Feedback.psm1.
+function issueUrl(template, fields) {
+  var q = ['template=' + template];
+  Object.keys(fields).sort().forEach(function (k) {
+    if (fields[k]) q.push(encodeURIComponent(k) + '=' + encodeURIComponent(fields[k]));
+  });
+  return 'https://github.com/lance6x5/Lazarus7/issues/new?' + q.join('&');
 }
 
 fetch('triage.json')

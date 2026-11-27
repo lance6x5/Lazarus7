@@ -1,0 +1,60 @@
+name: Tablet report (what worked for you)
+description: Tell us what worked or didn't on your real tablet. This is how "generic" button combos become confirmed.
+title: "[Report] "
+labels: ["device-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reports from real hardware are the most useful thing you can contribute. They're used to upgrade button
+        combos from **generic** to **reported**, and to fix the Diagnose advice.
+  - type: dropdown
+    id: tablet
+    attributes:
+      label: Tablet
+      options:
+        - HP Stream 7 (5701 / TSW 7H)
+        - HP Stream 7 (5709)
+        - HP Slate 7 2800
+        - HP Slate 7 Extreme
+        - HP Slate 7 Plus
+        - HP Slate 7 4600 / 4601
+        - HP Slate 7 VoiceTab
+        - HP Slate 7 HD
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: tried
+    attributes:
+      label: What did you try?
+      options:
+        - label: Button combo (say which below)
+        - label: Stream7-Check / recovery drive backup
+        - label: Restore Windows from recovery media or a saved backup
+        - label: Stream7-Repair (0xc0000225 / black screen)
+        - label: Windows 10 x86 install
+        - label: Debian 12 deployment + post-install script
+        - label: Android ADB / fastboot / Rockchip flashing
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Worked
+        - Partly worked
+        - Did not work
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: The exact combo or steps, what the screen showed, and anything you'd change in the instructions.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Lazarus7 version
+      placeholder: v1.6.0

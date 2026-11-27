@@ -5,6 +5,19 @@ and versions follow [Semantic Versioning](https://semver.org/).
 The release workflow publishes the matching section below as each GitHub release's notes, and the
 [website](https://lance6x5.github.io/Lazarus7/#changelog) shows it too.
 
+## [1.6.0] - 2026-11-27
+
+### Added
+- **Issue reporting through GitHub**: forms for *Report a problem*, *Request a feature* and *Tell us what worked*
+  (real-hardware results). Each one is labelled for triage, and blank issues are off.
+- **Report a problem / request a feature** in the tool's main menu opens a pre-filled form with your version and
+  PC OS.
+- Website: a **Feedback** section, plus a "Didn't solve it? Report it" link on every Diagnose result that fills in the
+  diagnosis path.
+- **Official downloads and support** links (HP Support, HP Stream 7 5701 drivers, Microsoft Windows 10, Debian) in the
+  tool's "Where do I get recovery media?" menu, on the website and in the guide. Lazarus7 deliberately doesn't link to
+  copies of HP or Microsoft recovery images.
+
 ## [1.5.0] - 2026-11-27
 
 ### Added
@@ -81,6 +94,7 @@ The release workflow publishes the matching section below as each GitHub release
 - Android tools: adb/fastboot (Google signature verified), sideload, flash, and the Rockchip flasher flow.
 - Dry-run mode, typed confirmations before destructive steps, Pester tests, field guide.
 
+[1.6.0]: https://github.com/lance6x5/Lazarus7/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/lance6x5/Lazarus7/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/lance6x5/Lazarus7/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/lance6x5/Lazarus7/compare/v1.2.0...v1.3.0

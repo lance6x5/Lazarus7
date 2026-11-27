@@ -184,6 +184,14 @@ with every tablet driver**. Where to get it, best first:
 Then: `Lazarus7.cmd` → **Restore Windows** → **HP recovery media / a recovery drive (folder)**, or
 **A recovery backup saved on this PC**. On the tablet: Vol-Down + Power → **F9** → the stick.
 
+**Official links** (Lazarus7 deliberately doesn't link to copies of HP or Microsoft images. They can't legally be
+redistributed, and unofficial copies can't be verified):
+- HP Support (recovery media, BIOS unlock codes): <https://support.hp.com/us-en/contact>
+- HP Stream 7 Tablet 5701 drivers and software: <https://support.hp.com/us-en/drivers/selfservice/hp-stream-tablets/7439994/model/7482041>
+- Microsoft Windows 10 download, Media Creation Tool → 32-bit (x86) → ISO: <https://www.microsoft.com/en-us/software-download/windows10>
+  (Microsoft's Windows 8.1 download page is gone; it returns 404.)
+- Debian 12 i386 images (Lazarus7 fetches these itself): <https://cdimage.debian.org/cdimage/archive/>
+
 A generic Windows 8.1 ISO is **not** a substitute. It isn't WIMBoot or compressed, has no tablet drivers, and barely
 fits in 32 GB.
 

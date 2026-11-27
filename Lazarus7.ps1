@@ -25,7 +25,7 @@ $Paths = @{
     Guide     = Join-Path $Root 'docs\GUIDE.md'
 }
 
-foreach ($m in 'Ui', 'Detect', 'Triage', 'Download', 'Usb', 'Android') {
+foreach ($m in 'Ui', 'Detect', 'Triage', 'Download', 'Usb', 'Android', 'Feedback') {
     Import-Module (Join-Path $Root "src\Lazarus7.$m.psm1") -Force -DisableNameChecking
 }
 
@@ -87,7 +87,12 @@ function Show-L7RecoverySources {
     Write-L7Info 'Recovery images on file-sharing sites: unverifiable - Lazarus7 will not fetch them.'
     Write-Host '   No media at all?' -ForegroundColor White
     Write-L7Info 'Debian 12 (Deploy Linux) needs nothing from HP and is supported until 2028.'
-    Wait-L7Key
+    Write-L7Info 'Microsoft no longer offers Windows 8.1 downloads (its page is gone); Windows 10 x86 still is.'
+    while ($true) {
+        $link = Read-L7Menu -Title 'Open an official page' -Items @(Get-L7OfficialLinks | ForEach-Object { @{ Key = $_.Url; Label = $_.Label } })
+        if (-not $link) { return }
+        Open-L7Url $link
+    }
 }
 
 function Select-L7DriversDir {
@@ -172,6 +177,7 @@ function Invoke-L7Action {
             'linux'    { Invoke-L7LinuxUsb }
             'android'  { Invoke-L7AndroidWizard -ToolsDir $Paths.Tools -DryRun:$DryRun }
             'guide'    { Start-Process $Paths.Guide }
+            'report'   { Invoke-L7FeedbackWizard }
         }
         $Action = $next
     }
@@ -188,6 +194,7 @@ while ($true) {
         @{ Key = 'detect';   Label = 'Identify a tablet over USB';         Hint = 'Android only - a Stream 7 never shows up' }
         @{ Key = 'android';  Label = 'Other HP tablets: Android Slate 7';  Hint = 'ADB, fastboot, Rockchip' }
         @{ Key = 'guide';    Label = 'Open the full guide' }
+        @{ Key = 'report';   Label = 'Report a problem / request a feature'; Hint = 'opens a pre-filled GitHub issue' }
     )
     if (-not $choice) { break }
     try {
