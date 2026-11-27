@@ -72,6 +72,24 @@ function Show-L7FirstAid {
     Wait-L7Key
 }
 
+function Show-L7RecoverySources {
+    Write-L7Section 'Where Stream 7 recovery media comes from (best first)'
+    Write-Host '   1. Make it yourself, while Windows 8.1 still boots' -ForegroundColor White
+    Write-L7Info 'Lazarus7 toolkit USB -> Stream7-Check on the tablet -> option 2 (Recovery Drive,'
+    Write-L7Info 'tick "Copy the recovery partition"). Then "Save a recovery USB to this PC" here.'
+    Write-Host '   2. HP Support' -ForegroundColor White
+    Write-L7Info 'HP supplied recovery USBs for this tablet through its support channels. Ask with the'
+    Write-L7Info 'serial + product number (Stream7-Check saves both). Not guaranteed for a 2014 tablet.'
+    Write-L7Info 'Third-party "recovery kits" exist; buyers report mixed results - check the exact model.'
+    Write-Host '   3. Not an option' -ForegroundColor White
+    Write-L7Info 'HP Cloud Recovery Tool: its supported list has no Stream 7 and no Windows 8.x images.'
+    Write-L7Info 'A generic Windows 8.1 ISO is not WIMBoot, has no tablet drivers and barely fits.'
+    Write-L7Info 'Recovery images on file-sharing sites: unverifiable - Lazarus7 will not fetch them.'
+    Write-Host '   No media at all?' -ForegroundColor White
+    Write-L7Info 'Debian 12 (Deploy Linux) needs nothing from HP and is supported until 2028.'
+    Wait-L7Key
+}
+
 function Select-L7DriversDir {
     if (-not (Read-L7YesNo 'Add a folder of HP Stream 7 5701 drivers to the stick? (recommended for Windows 10)')) { return $null }
     Write-L7Info 'Get them from HP: support.hp.com -> "HP Stream 7 Tablet - 5701" (check the label: 5701 vs 5709).'
@@ -87,17 +105,32 @@ function Invoke-L7Toolkit {
 function Invoke-L7WindowsUsb {
     if (-not (Assert-L7AdminForUsb)) { return }
     Write-L7Section 'Restore Windows on the Stream 7'
-    Write-L7Info 'Already made a recovery drive ON the tablet? It boots as-is: Vol- + Power -> F9 -> the stick.'
-    $kind = Read-L7Menu -Title 'Windows recovery USB - source' -Items @(
-        @{ Key = 'hp';  Label = 'HP recovery files (folder) - recommended'; Hint = 'factory Windows 8.1 with Bing (WIMBoot) + all tablet drivers' }
-        @{ Key = 'iso'; Label = 'Windows 10 x86 (32-bit) ISO';             Hint = 'unsupported since Oct 2025; may NOT activate with the 8.1 key' }
-    )
+    Write-L7Info 'The tablet cannot be flashed from this PC over USB (its port has no device mode).'
+    Write-L7Info 'This PC builds the stick; the tablet boots it: Vol- + Power -> F9 -> the stick.'
+    $backups = @(Get-L7RecoveryBackup)
+    $items = @()
+    if ($backups.Count) {
+        $items += @{ Key = 'saved'; Label = 'A recovery backup saved on this PC'; Hint = "$($backups.Count) found - verified before and after writing" }
+    }
+    $items += @{ Key = 'hp';     Label = 'HP recovery media / a recovery drive (folder)'; Hint = 'factory Windows 8.1 with Bing (WIMBoot) + drivers' }
+    $items += @{ Key = 'backup'; Label = 'Save a recovery USB to this PC';                Hint = 'do this once, right after making the recovery drive' }
+    $items += @{ Key = 'where';  Label = 'Where do I get recovery media?' }
+    $items += @{ Key = 'iso';    Label = 'Windows 10 x86 (32-bit) ISO';                   Hint = 'unsupported since Oct 2025; may NOT activate with the 8.1 key' }
+    $kind = Read-L7Menu -Title 'Windows recovery USB - source' -Items $items
     if (-not $kind) { return }
     $drivers = $null
-    if ($kind -eq 'hp') {
-        Write-L7Info 'Order or download from HP with the serial + product number (Stream7-Check saves both).'
+    $src = $null
+    if ($kind -eq 'backup') { Invoke-L7BackupRecoveryUsb -DryRun:$DryRun; Wait-L7Key; return }
+    if ($kind -eq 'where') { Show-L7RecoverySources; return }
+    if ($kind -eq 'saved') {
+        $pick = Read-L7Menu -Title 'Which backup?' -Items @($backups | ForEach-Object {
+            @{ Key = $_.Folder; Label = $_.Name; Hint = ("{0} files, {1:N1} GB, label {2}" -f $_.Manifest.FileCount, ($_.Manifest.TotalSize / 1GB), $_.Manifest.Label) } })
+        if (-not $pick) { return }
+        $src = $pick
+    } elseif ($kind -eq 'hp') {
+        Write-L7Info 'Already have the recovery drive as a stick? It boots as-is - no need to rebuild it.'
         Write-L7Info 'A generic Windows 8.1 ISO is NOT the same: no WIMBoot, no drivers, and it barely fits.'
-        $src = Select-L7Folder -Title 'Folder with the HP recovery USB files'
+        $src = Select-L7Folder -Title 'Folder with the HP recovery / recovery drive files'
     } else {
         Write-L7Warn 'Windows 10 here: 32-bit only, end of support Oct 2025, and Microsoft stopped honouring'
         Write-L7Warn 'Windows 8.x keys for upgrades in 2023 - a clean install may stay unactivated.'

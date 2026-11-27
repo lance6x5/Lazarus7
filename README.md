@@ -28,7 +28,7 @@ tablets get ADB, fastboot and Rockchip tools as a secondary path.
   | |___   / ___ \   / /_   / ___ \  |  _ <  | |_| |  ___) |   / /
   |_____| /_/   \_\ /____| /_/   \_\ |_| \_\  \___/  |____/   /_/
 
-  Raise your 7-inch HP tablet from the dead.   v1.3.0
+  Raise your 7-inch HP tablet from the dead.   v1.4.0
 ```
 
 ## 🌐 Run from the web

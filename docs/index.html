@@ -112,7 +112,7 @@
 
 <nav><div class="wrap">
   <span class="brand">LAZARUS7</span>
-  <a class="ver" id="navVer" href="#changelog">v1.3.0</a>
+  <a class="ver" id="navVer" href="#changelog">v1.4.0</a>
   <a href="#launch">Launch</a>
   <a href="#diagnose">Diagnose</a>
   <a href="#identify">Android scan</a>
@@ -128,8 +128,8 @@
     <b>Windows 8.1 with Bing</b>. Back up its WIMBoot Windows, restore factory 8.1, or give it a second life on Debian.
     Diagnose right here in your browser, then launch the full tool with one line.</p>
   <!-- Static values are the fallback; the script below refreshes them from the GitHub API. -->
-  <div class="relinfo" id="relinfo" data-version="1.3.0">
-    <a class="chip" id="chipVer" href="https://github.com/lance6x5/Lazarus7/releases/latest">Latest release <b>v1.3.0</b></a>
+  <div class="relinfo" id="relinfo" data-version="1.4.0">
+    <a class="chip" id="chipVer" href="https://github.com/lance6x5/Lazarus7/releases/latest">Latest release <b>v1.4.0</b></a>
     <span class="chip" id="chipRel">Released <b>2026-11-27</b></span>
     <a class="chip" id="chipSite" href="https://github.com/lance6x5/Lazarus7/commits/main/docs">Site updated <b>-</b></a>
   </div>
@@ -188,6 +188,14 @@
       <dd>C: holds only ~4 GB. The rest of Windows 8.1 lives compressed in the ~5 GB recovery partition, so deleting it
         breaks Windows. Back it up first: Windows' <b>Recovery Drive</b> tool with "Copy the recovery partition" ticked,
         on its own 8 GB+ stick.</dd>
+    </dl></div>
+    <div class="card"><dl>
+      <dt>Can my PC flash it over a USB cable?</dt>
+      <dd>No. Its micro-USB port is charge + OTG host only, so the tablet never shows up on a PC. The PC <b>builds a USB
+        stick</b>, and the tablet boots it with <kbd>Vol-</kbd> + <kbd>Power</kbd> &rarr; <kbd>F9</kbd>.</dd>
+      <dt>Where do I get recovery media?</dt>
+      <dd>Best: your own recovery drive, saved and verified on your PC with Lazarus7. Then HP Support. HP's Cloud Recovery
+        Tool doesn't cover the Stream 7 or Windows 8.x.</dd>
     </dl></div>
     <div class="card"><dl>
       <dt>Shopping list for USB work</dt>

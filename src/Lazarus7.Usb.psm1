@@ -92,10 +92,11 @@ function Initialize-L7UsbDisk {
 }
 
 function Copy-L7Tree {
-    param([string]$From, [string]$To, [string[]]$ExcludeFiles = @(), [switch]$DryRun)
+    param([string]$From, [string]$To, [string[]]$ExcludeFiles = @(), [string[]]$ExcludeDirs = @(), [switch]$DryRun)
     if ($DryRun) { Write-L7Info "[dry run] Would copy $From -> $To"; return }
     $args_ = @($From, $To, '/E', '/R:1', '/W:1', '/NFL', '/NDL', '/NJH', '/NP')
     if ($ExcludeFiles.Count) { $args_ += '/XF'; $args_ += $ExcludeFiles }
+    if ($ExcludeDirs.Count) { $args_ += '/XD'; $args_ += $ExcludeDirs }
     & robocopy @args_ | Out-Host
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed (exit $LASTEXITCODE)" }
 }
@@ -104,23 +105,148 @@ function Get-L7RemovableVolume {
     Get-Volume | Where-Object { $_.DriveType -eq 'Removable' -and $_.DriveLetter -and $_.FileSystem }
 }
 
+function Select-L7RemovableVolume {
+    param([Parameter(Mandatory)][string]$Title)
+    $vols = @(Get-L7RemovableVolume)
+    if ($vols.Count -eq 0) {
+        Write-L7Warn 'No removable USB drive with a file system found. Plug the stick in and try again.'
+        return $null
+    }
+    $items = foreach ($v in $vols) {
+        @{ Key = [string]$v.DriveLetter; Label = ("{0}:  {1}" -f $v.DriveLetter, $(if ($v.FileSystemLabel) { $v.FileSystemLabel } else { '(no label)' }));
+           Hint = ("{0}, {1:N1} GB used of {2:N1} GB" -f $v.FileSystem, (($v.Size - $v.SizeRemaining) / 1GB), ($v.Size / 1GB)) }
+    }
+    $letter = Read-L7Menu -Title $Title -Items $items
+    if (-not $letter) { return $null }
+    return ($vols | Where-Object { [string]$_.DriveLetter -eq $letter })
+}
+
+# ---- Recovery USB backups ---------------------------------------------------
+# A recovery drive made on the tablet (or HP's own media) is the only way back to
+# the factory WIMBoot Windows 8.1, and HP no longer offers this tablet in its
+# Cloud Recovery Tool. So Lazarus7 keeps a verified copy on the PC.
+
+$script:ManifestName = 'lazarus7-manifest.json'
+$script:SkipDirs = @('System Volume Information', '$RECYCLE.BIN')
+
+function Get-L7BackupRoot {
+    Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'Lazarus7\Backups'
+}
+
+<#
+  Pure-ish: hashes every file under Root (except the manifest itself and the
+  Windows housekeeping folders) and returns a manifest object.
+#>
+function New-L7FileManifest {
+    param([Parameter(Mandatory)][string]$Root, [string]$Label = '', [string]$Source = '')
+    $rootFull = (Resolve-Path -LiteralPath $Root).Path.TrimEnd('\') + '\'
+    $files = Get-ChildItem -LiteralPath $rootFull -Recurse -File -Force -ErrorAction SilentlyContinue |
+        Where-Object {
+            $rel = $_.FullName.Substring($rootFull.Length)
+            $top = $rel.Split('\')[0]
+            ($rel -ne $script:ManifestName) -and ($script:SkipDirs -notcontains $top)
+        } |
+        Sort-Object FullName |
+        ForEach-Object {
+            [pscustomobject]@{
+                Path   = $_.FullName.Substring($rootFull.Length)
+                Size   = $_.Length
+                Sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash
+            }
+        }
+    [pscustomobject]@{
+        Tool      = 'Lazarus7'
+        Version   = (Get-Lazarus7Version)
+        Created   = (Get-Date).ToString('o')
+        Label     = $Label
+        Source    = $Source
+        FileCount = @($files).Count
+        TotalSize = [int64](($files | Measure-Object -Property Size -Sum).Sum)
+        Files     = @($files)
+    }
+}
+
+<#
+  Returns the list of problems (missing / wrong size / wrong hash); empty = OK.
+#>
+function Test-L7FileManifest {
+    param([Parameter(Mandatory)][string]$Root, [Parameter(Mandatory)]$Manifest)
+    $problems = @()
+    foreach ($f in $Manifest.Files) {
+        $p = Join-Path $Root $f.Path
+        if (-not (Test-Path -LiteralPath $p)) { $problems += "missing: $($f.Path)"; continue }
+        $item = Get-Item -LiteralPath $p -Force
+        if ($item.Length -ne [int64]$f.Size) { $problems += "size differs: $($f.Path)"; continue }
+        if ((Get-FileHash -Algorithm SHA256 -LiteralPath $p).Hash -ne $f.Sha256) { $problems += "content differs: $($f.Path)" }
+    }
+    return $problems
+}
+
+function Read-L7Manifest {
+    param([Parameter(Mandatory)][string]$Folder)
+    $m = Join-Path $Folder $script:ManifestName
+    if (-not (Test-Path -LiteralPath $m)) { return $null }
+    return ([IO.File]::ReadAllText($m, [Text.Encoding]::UTF8) | ConvertFrom-Json)
+}
+
+function Get-L7RecoveryBackup {
+    $root = Get-L7BackupRoot
+    if (-not (Test-Path $root)) { return @() }
+    Get-ChildItem -LiteralPath $root -Directory | Sort-Object Name -Descending | ForEach-Object {
+        $m = Read-L7Manifest $_.FullName
+        if ($m) { [pscustomobject]@{ Folder = $_.FullName; Name = $_.Name; Manifest = $m } }
+    }
+}
+
+<#
+  Copies a recovery USB (made on the tablet, or HP's media) to
+  Documents\Lazarus7\Backups\<name> and writes a SHA256 manifest.
+#>
+function Invoke-L7BackupRecoveryUsb {
+    param([switch]$DryRun)
+    Write-L7Section 'Save a recovery USB to this PC'
+    Write-L7Info 'Plug in the recovery drive you made on the tablet (or HP recovery media). Nothing on it is changed.'
+    $vol = Select-L7RemovableVolume -Title 'Which stick is the recovery drive?'
+    if (-not $vol) { return }
+    $src = "$($vol.DriveLetter):\"
+    if (-not (Test-L7Ia32Boot $src)) {
+        Write-L7Warn 'This stick has no EFI\BOOT\BOOTIA32.EFI, so it may not be a Stream 7 recovery drive.'
+        if (-not (Read-L7YesNo 'Back it up anyway?')) { return }
+    }
+    $usedGb = ($vol.Size - $vol.SizeRemaining) / 1GB
+    $name = 'Stream7-Recovery-' + (Get-Date -Format 'yyyyMMdd-HHmm')
+    $dest = Join-Path (Get-L7BackupRoot) $name
+    Write-L7Info ("About {0:N1} GB will be copied to {1}" -f $usedGb, $dest)
+    if ($DryRun) { Write-L7Info '[dry run] Would copy the stick and write a SHA256 manifest.'; return }
+
+    $null = New-Item -ItemType Directory -Force $dest
+    Write-L7Step 'Copying (a few minutes)...'
+    Copy-L7Tree -From $src -To $dest -ExcludeDirs $script:SkipDirs
+    Write-L7Step 'Hashing every file (SHA256)...'
+    $manifest = New-L7FileManifest -Root $dest -Label $vol.FileSystemLabel -Source "$src ($($vol.FileSystemLabel))"
+    $json = $manifest | ConvertTo-Json -Depth 4
+    [IO.File]::WriteAllText((Join-Path $dest $script:ManifestName), $json, (New-Object Text.UTF8Encoding($false)))
+
+    Write-L7Step 'Re-reading the stick to confirm the copy matches...'
+    $problems = Test-L7FileManifest -Root $src -Manifest $manifest
+    if ($problems.Count) {
+        Write-L7Fail "The stick and the copy differ ($($problems.Count) files). The stick may be failing:"
+        $problems | Select-Object -First 10 | ForEach-Object { Write-L7Info $_ }
+        return
+    }
+    Write-L7Ok ("Saved {0} files ({1:N1} GB), verified: {2}" -f $manifest.FileCount, ($manifest.TotalSize / 1GB), $dest)
+    Write-L7Info 'Rebuild a stick from it any time: Restore Windows -> "A recovery backup saved on this PC".'
+}
+
 <#
   Copies the tablet-side helpers (and optionally a drivers folder) onto an
   existing USB stick WITHOUT erasing it:  <usb>\lazarus7\windows, <usb>\lazarus7\linux, <usb>\Drivers
 #>
 function Invoke-L7ToolkitUsb {
     param([Parameter(Mandatory)][string]$PayloadDir, [string]$DriversDir, [switch]$DryRun)
-    $vols = @(Get-L7RemovableVolume)
-    if ($vols.Count -eq 0) {
-        Write-L7Warn 'No removable USB drive with a file system found. Plug in a FAT32/exFAT/NTFS stick.'
-        return
-    }
-    $items = foreach ($v in $vols) {
-        @{ Key = [string]$v.DriveLetter; Label = ("{0}:  {1}" -f $v.DriveLetter, $(if ($v.FileSystemLabel) { $v.FileSystemLabel } else { '(no label)' }));
-           Hint = ("{0}, {1:N1} GB free" -f $v.FileSystem, ($v.SizeRemaining / 1GB)) }
-    }
-    $letter = Read-L7Menu -Title 'Copy the Lazarus7 tablet toolkit to which stick? (nothing is erased)' -Items $items
-    if (-not $letter) { return }
+    $vol = Select-L7RemovableVolume -Title 'Copy the Lazarus7 tablet toolkit to which stick? (nothing is erased)'
+    if (-not $vol) { return }
+    $letter = $vol.DriveLetter
     $root = "${letter}:\"
     Copy-L7Tree -From $PayloadDir -To (Join-Path $root 'lazarus7') -DryRun:$DryRun
     if ($DriversDir) { Copy-L7Tree -From $DriversDir -To (Join-Path $root 'Drivers') -DryRun:$DryRun }
@@ -146,11 +272,25 @@ function Invoke-L7BuildUsb {
         [Parameter(Mandatory)][string]$SourcePath,
         [Parameter(Mandatory)][string]$PayloadDir,
         [string]$DriversDir,
+        [string]$Label = 'LAZARUS7',
         [switch]$DryRun
     )
     $src = Open-L7Source $SourcePath
     try {
         Write-L7Step "Inspecting $SourcePath"
+        # A Lazarus7 backup carries a SHA256 manifest: verify it before wiping anything.
+        $manifest = Read-L7Manifest $src.Root
+        if ($manifest) {
+            Write-L7Step ("Verifying the saved backup ({0} files)..." -f $manifest.FileCount)
+            $bad = Test-L7FileManifest -Root $src.Root -Manifest $manifest
+            if ($bad.Count) {
+                Write-L7Fail "The backup on this PC is damaged ($($bad.Count) files) - not writing it:"
+                $bad | Select-Object -First 10 | ForEach-Object { Write-L7Info $_ }
+                return
+            }
+            Write-L7Ok 'Backup verified.'
+            if ($manifest.Label) { $Label = $manifest.Label }
+        }
         if (Test-L7Ia32Boot $src.Root) {
             Write-L7Ok 'EFI\BOOT\BOOTIA32.EFI found - the Stream 7 can boot this.'
         } else {
@@ -176,11 +316,12 @@ function Invoke-L7BuildUsb {
             return
         }
 
-        $dest = Initialize-L7UsbDisk -Disk $disk -DryRun:$DryRun
+        $dest = Initialize-L7UsbDisk -Disk $disk -Label $Label -DryRun:$DryRun
         if ($DryRun) { $dest = '<usb>\' }
 
         Write-L7Step 'Copying files (this takes a few minutes)...'
-        Copy-L7Tree -From $src.Root -To $dest -ExcludeFiles @($wim | ForEach-Object Name) -DryRun:$DryRun
+        $skipFiles = @($wim | ForEach-Object Name) + @($script:ManifestName)
+        Copy-L7Tree -From $src.Root -To $dest -ExcludeFiles $skipFiles -ExcludeDirs $script:SkipDirs -DryRun:$DryRun
         if ($wim) {
             $swm = Join-Path $dest 'sources\install.swm'
             if ($DryRun) { Write-L7Info "[dry run] Would run DISM /Split-Image -> $swm" }
@@ -198,6 +339,19 @@ function Invoke-L7BuildUsb {
 
         if (-not $DryRun -and -not (Test-L7Ia32Boot $dest)) {
             Write-L7Warn 'Finished, but BOOTIA32.EFI is missing on the stick.'
+        }
+        if ($manifest) {
+            if ($DryRun) { Write-L7Info '[dry run] Would re-read the stick and check every file against the manifest.' }
+            else {
+                Write-L7Step 'Re-reading the stick to check every file...'
+                $bad = Test-L7FileManifest -Root $dest -Manifest $manifest
+                if ($bad.Count) {
+                    Write-L7Fail "The stick does not match the backup ($($bad.Count) files). Try another stick:"
+                    $bad | Select-Object -First 10 | ForEach-Object { Write-L7Info $_ }
+                    return
+                }
+                Write-L7Ok 'Stick verified against the backup - identical.'
+            }
         }
         Write-L7Section 'USB done - now on the tablet'
         Write-L7Info '1. Connect stick + keyboard via OTG adapter and a POWERED hub.'
@@ -217,4 +371,6 @@ function Invoke-L7BuildUsb {
 }
 
 Export-ModuleMember -Function Get-L7UsbDisk, Select-L7UsbDisk, Open-L7Source, Close-L7Source, Test-L7Ia32Boot,
-    Get-L7OversizedFile, Initialize-L7UsbDisk, Copy-L7Tree, Invoke-L7BuildUsb, Get-L7RemovableVolume, Invoke-L7ToolkitUsb
+    Get-L7OversizedFile, Initialize-L7UsbDisk, Copy-L7Tree, Invoke-L7BuildUsb, Get-L7RemovableVolume, Invoke-L7ToolkitUsb,
+    Select-L7RemovableVolume, Get-L7BackupRoot, New-L7FileManifest, Test-L7FileManifest, Read-L7Manifest,
+    Get-L7RecoveryBackup, Invoke-L7BackupRecoveryUsb

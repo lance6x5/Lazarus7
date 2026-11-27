@@ -5,6 +5,21 @@ and versions follow [Semantic Versioning](https://semver.org/).
 The release workflow publishes the matching section below as each GitHub release's notes, and the
 [website](https://lance6x5.github.io/Lazarus7/#changelog) shows it too.
 
+## [1.4.0] - 2026-11-27
+
+### Added
+- **Save a recovery USB to this PC**: copies a recovery drive (made on the tablet, or HP's media) to
+  `Documents\Lazarus7\Backups\`. It writes a SHA256 manifest of every file and re-reads the stick to prove the copy
+  matches.
+- **Rebuild from a saved backup**: Restore Windows lists your saved backups and verifies the backup before wiping
+  the stick. It keeps the original volume label, then re-reads the new stick and checks every file against the
+  manifest.
+- **Where do I get recovery media?** explains the options for this tablet, in order. HP's Cloud Recovery Tool doesn't
+  cover the Stream 7, and the tablet can't be flashed from a PC over USB.
+
+### Changed
+- CI: `actions/checkout` bumped to v7.
+
 ## [1.3.0] - 2026-11-27
 
 ### Changed
@@ -52,6 +67,7 @@ The release workflow publishes the matching section below as each GitHub release
 - Android tools: adb/fastboot (Google signature verified), sideload, flash, and the Rockchip flasher flow.
 - Dry-run mode, typed confirmations before destructive steps, Pester tests, field guide.
 
+[1.4.0]: https://github.com/lance6x5/Lazarus7/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/lance6x5/Lazarus7/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/lance6x5/Lazarus7/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/lance6x5/Lazarus7/compare/1e4055e...v1.1.0

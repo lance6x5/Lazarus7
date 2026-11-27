@@ -132,6 +132,47 @@ d588973497974b3991e2e1f5c444c0aec7075de295e4fc567a4b17a277a95c80  debian-edu-12.
     }
 }
 
+Describe 'Recovery backup manifest' {
+    $src = Join-Path $TestDrive 'stick'
+    New-Item -ItemType Directory -Force (Join-Path $src 'EFI\BOOT'), (Join-Path $src 'sources'), (Join-Path $src 'System Volume Information') | Out-Null
+    Set-Content (Join-Path $src 'EFI\BOOT\BOOTIA32.EFI') 'loader'
+    Set-Content (Join-Path $src 'sources\install.wim') 'pretend this is 3.8 GB'
+    Set-Content (Join-Path $src 'System Volume Information\IndexerVolumeGuid') 'noise'
+    $m = New-L7FileManifest -Root $src -Label 'RECOVERY'
+
+    It 'lists real files and skips Windows housekeeping folders' {
+        $m.FileCount | Should Be 2
+        ($m.Files | ForEach-Object Path) -contains 'sources\install.wim' | Should Be $true
+        @($m.Files | Where-Object { $_.Path -like 'System Volume Information*' }).Count | Should Be 0
+        $m.Label | Should Be 'RECOVERY'
+    }
+    It 'passes an identical copy' {
+        $copy = Join-Path $TestDrive 'copy'
+        Copy-Item -Recurse $src $copy
+        @(Test-L7FileManifest -Root $copy -Manifest $m).Count | Should Be 0
+    }
+    It 'survives a JSON round trip (how backups are stored)' {
+        $back = $m | ConvertTo-Json -Depth 4 | ConvertFrom-Json
+        @(Test-L7FileManifest -Root $src -Manifest $back).Count | Should Be 0
+    }
+    It 'catches changed, truncated and missing files' {
+        $bad = Join-Path $TestDrive 'bad'
+        Copy-Item -Recurse $src $bad
+        Set-Content (Join-Path $bad 'sources\install.wim') 'pretend this is 3.8 GB!'
+        Remove-Item (Join-Path $bad 'EFI\BOOT\BOOTIA32.EFI')
+        $problems = Test-L7FileManifest -Root $bad -Manifest $m
+        @($problems).Count | Should Be 2
+        ($problems -join ' ') -match 'missing: EFI\\BOOT\\BOOTIA32.EFI' | Should Be $true
+        ($problems -join ' ') -match 'install.wim' | Should Be $true
+    }
+    It 'catches a same-size corruption (hash, not just size)' {
+        $flip = Join-Path $TestDrive 'flip'
+        Copy-Item -Recurse $src $flip
+        Set-Content (Join-Path $flip 'sources\install.wim') 'PRETEND this is 3.8 GB'
+        ((Test-L7FileManifest -Root $flip -Manifest $m) -join ' ') -match 'content differs' | Should Be $true
+    }
+}
+
 Describe 'USB source checks' {
     $root = Join-Path $TestDrive 'iso'
     New-Item -ItemType Directory -Force (Join-Path $root 'EFI\BOOT') | Out-Null

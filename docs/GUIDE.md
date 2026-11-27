@@ -99,14 +99,40 @@ Do this while Windows still boots. You need a **micro-USB OTG adapter**, a **pow
 
 ## 4. Restore Windows
 
+### Can a Windows PC recover the Stream 7 over a USB cable?
+**No, not directly.** On Windows-only Bay Trail tablets like the Stream 7, the micro-USB port works only for
+charging and as a **host** (OTG) port. The external "device/gadget mode" PHY is missing, so the tablet never shows up
+on a PC. Intel's DnX flashing mode may appear on screen on some Bay Trail tablets, but it doesn't work on these units,
+and HP documents no PC-to-tablet flashing tool. The eMMC is soldered, so it can't be pulled and written on a PC either.
+
+What *does* work, and what Lazarus7 automates: the **PC prepares a USB stick**, and the **tablet boots it** through
+the OTG adapter (Vol-Down + Power → **F9**). For Windows recovery, that stick is your recovery drive or HP media.
+
+### Keep a verified copy of your recovery drive on the PC
+Recovery sticks fail, and replacement media for this tablet is hard to get. Once you've made the recovery drive
+(section 3), plug it into the PC and run `Lazarus7.cmd` → **Restore Windows** → **Save a recovery USB to this PC**.
+Lazarus7 copies it to `Documents\Lazarus7\Backups\Stream7-Recovery-<date>`, hashes every file (SHA256), and re-reads
+the stick to prove the copy matches. Later, **Restore Windows → A recovery backup saved on this PC** writes a fresh
+stick. It verifies the backup before wiping anything, keeps the original volume label, and checks every file on
+the new stick afterwards.
+
+### Getting recovery media
 **Already made a recovery drive (section 3)?** It boots as-is: Vol-Down + Power → **F9** → the stick.
 
-**Option A: HP recovery media (recommended).** This restores the factory **Windows 8.1 with Bing (WIMBoot) with every
-tablet driver**.
-1. Order or download it from HP using the **serial + product number** (on the back label, in the F10 BIOS screen, or in
-   the Stream7-Check report). Search "HP Recovery Media" + your product number.
-2. Launch `Lazarus7.cmd` → **Restore Windows (recovery USB)** → **HP recovery files**.
-3. Tablet: Vol-Down + Power → **F9** → the stick.
+**Option A: factory recovery media (recommended).** This restores the factory **Windows 8.1 with Bing (WIMBoot)
+with every tablet driver**. Where to get it, best first:
+1. **Your own recovery drive** (section 3), and the verified backup Lazarus7 keeps of it on your PC. This is the only
+   source you fully control, so make it while Windows 8.1 still boots.
+2. **HP Support.** HP supplied USB recovery media for its tablets through support channels. Ask with the **serial +
+   product number** (back label, F10 BIOS screen, or the Stream7-Check report). Don't count on it for a 2014 tablet.
+3. **Third-party "Stream 7 recovery kits"** are sold online. Buyers report mixed results, including kits meant for a
+   different model, so check the exact model (5701 vs 5709) and the refund terms.
+4. **Not available:** HP's **Cloud Recovery Tool**. Its supported-platforms list has no Stream 7 and no Windows 8.x
+   images (only Windows 7/10/11), so it can't produce media for this tablet. Lazarus7 won't fetch images from
+   file-sharing sites, because their contents can't be verified.
+
+Then: `Lazarus7.cmd` → **Restore Windows** → **HP recovery media / a recovery drive (folder)**, or
+**A recovery backup saved on this PC**. On the tablet: Vol-Down + Power → **F9** → the stick.
 
 A generic Windows 8.1 ISO is **not** a substitute. It isn't WIMBoot or compressed, has no tablet drivers, and barely
 fits in 32 GB.
@@ -178,6 +204,9 @@ the PC and use **Identify a tablet over USB** while trying the button combos:
 ---
 
 ## Sources
+- Hans de Goede, unbricking Bay/Cherry Trail tablets (DnX and the missing device-mode PHY): <https://hansdegoede.livejournal.com/25342.html>
+- HP Stream 7 maintenance and service manual: <https://www.manualslib.com/manual/2199305/Hp-Stream-7.html>
+- HP Cloud Recovery Tool supported platforms: <https://ftp.hp.com/pub/caps-softpaq/CloudRecovery/crsupportedplatform.html>
 - Debian wiki, HP Stream 7 on Bookworm: <https://wiki.debian.org/InstallingDebianOn/HP/Stream%207/Bookworm>
 - HP Community, replacing Win 8.1 Bing WIMBoot: <https://h30434.www3.hp.com/t5/Tablets-and-Mobile-Devices-Archive-Read-Only/How-do-I-replace-Win-8-1-Bing-quot-WIMBoot-quot-with/td-p/5010315>
 - HP Community, Stream 7 Windows 10 / can't recover 8.1: <https://h30434.www3.hp.com/t5/Tablets-and-Mobile-Devices-Archive-Read-Only/HP-Stream-7-Windows-10-doesn-t-boot-I-can-t-recovery-8-1/td-p/4968314>
