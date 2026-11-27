@@ -1,0 +1,8 @@
+* text=auto
+# Runs on the tablet under Linux: must keep LF endings.
+*.sh    text eol=lf
+# Windows-only launchers and scripts.
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+*.psm1  text eol=crlf
+*.svg   text eol=lf

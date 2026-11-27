@@ -1,0 +1,7 @@
+# Large or machine-specific files Lazarus7 creates at runtime
+downloads/
+tools/
+*.part
+*.iso
+*.img
+*.zip

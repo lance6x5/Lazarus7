@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" role="img" aria-label="Lazarus7 logo">
+  <!-- Lazarus7 - Copyright (c) 2026 lance6x5 - MIT License -->
+  <defs>
+    <linearGradient id="fire" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#7a0b0b"/>
+      <stop offset="0.35" stop-color="#e23b1a"/>
+      <stop offset="0.7" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#fde68a"/>
+    </linearGradient>
+    <linearGradient id="text" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#ef4444"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="200" rx="20" fill="#111318"/>
+  <!-- tablet -->
+  <rect x="40" y="30" width="96" height="140" rx="12" fill="#1f232b" stroke="#3b4150" stroke-width="3"/>
+  <rect x="50" y="44" width="76" height="106" rx="4" fill="#0b0d11"/>
+  <circle cx="88" cy="160" r="4" fill="#3b4150"/>
+  <!-- phoenix flame rising from the screen -->
+  <path d="M88 142 C 64 126, 62 100, 76 82 C 78 96, 84 100, 88 102 C 86 86, 92 68, 106 58
+           C 102 76, 112 90, 110 108 C 116 102, 118 96, 118 88 C 128 104, 122 132, 88 142 Z"
+        fill="url(#fire)"/>
+  <!-- wordmark -->
+  <text x="170" y="112" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="68" font-weight="800"
+        letter-spacing="2" fill="url(#text)">LAZARUS<tspan fill="#fde68a">7</tspan></text>
+  <text x="173" y="148" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="19" fill="#9ca3af">
+    Raise your 7-inch HP tablet from the dead.</text>
+</svg>
