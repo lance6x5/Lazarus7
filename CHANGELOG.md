@@ -5,6 +5,24 @@ and versions follow [Semantic Versioning](https://semver.org/).
 The release workflow publishes the matching section below as each GitHub release's notes, and the
 [website](https://lance6x5.github.io/Lazarus7/#changelog) shows it too.
 
+## [1.7.0] - 2026-11-27
+
+### Added
+- **Kodi media center**: Deploy an OS → *Debian 12 i386 - Kodi media center*. The new
+  `payload/linux/stream7-media-center.sh` installs Kodi 20, `inputstream-adaptive` and `i965-va-driver` (Bay Trail
+  VA-API: H.264, MPEG-2 and VC-1 in hardware). It auto-logs into a *Lazarus7 Kodi* session, which rotates the
+  portrait 800x1280 panel to landscape and maps the Goodix touchscreen to match. Options: `--rotate`,
+  `--no-autologin`, `--user`.
+- **Android-x86 9.0-r2 (32-bit), experimental**: Deploy an OS downloads it from SourceForge. Both checksums must match:
+  SHA-1 from android-x86.org's release note and MD5 from SourceForge. Its ISO ships `bootia32.efi` (checked), so the
+  Stream 7 boots it. You're told to try Live mode first.
+- Guide 5b (Kodi) and 5c (Android-x86), and a fuller OS table on the site and in the guide. LibreELEC, Bliss OS and
+  PrimeOS are listed as not viable, with reasons.
+
+### Changed
+- "Deploy Linux" is now **Deploy an OS**.
+- The USB builder reports success, so follow-up instructions appear only after a stick was actually built.
+
 ## [1.6.0] - 2026-11-27
 
 ### Added
@@ -94,6 +112,7 @@ The release workflow publishes the matching section below as each GitHub release
 - Android tools: adb/fastboot (Google signature verified), sideload, flash, and the Rockchip flasher flow.
 - Dry-run mode, typed confirmations before destructive steps, Pester tests, field guide.
 
+[1.7.0]: https://github.com/lance6x5/Lazarus7/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/lance6x5/Lazarus7/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/lance6x5/Lazarus7/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/lance6x5/Lazarus7/compare/v1.3.0...v1.4.0

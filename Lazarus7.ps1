@@ -144,21 +144,56 @@ function Invoke-L7WindowsUsb {
         if ($src) { $drivers = Select-L7DriversDir }
     }
     if (-not $src) { return }
-    Invoke-L7BuildUsb -Mode windows -SourcePath $src -PayloadDir $Paths.Payload -DriversDir $drivers -DryRun:$DryRun
+    $null = Invoke-L7BuildUsb -Mode windows -SourcePath $src -PayloadDir $Paths.Payload -DriversDir $drivers -DryRun:$DryRun
     Wait-L7Key
 }
 
 function Invoke-L7LinuxUsb {
     if (-not (Assert-L7AdminForUsb)) { return }
-    $kind = Read-L7Menu -Title 'Deploy Linux - choose the OS' -Items @(
-        @{ Key = 'debian'; Label = 'Debian 12 i386 (recommended)'; Hint = 'auto-download + SHA256 check; security support to 2028' }
-        @{ Key = 'custom'; Label = 'My own ISO';                   Hint = 'must contain EFI\BOOT\BOOTIA32.EFI' }
+    $kind = Read-L7Menu -Title 'Deploy an OS - choose one' -Items @(
+        @{ Key = 'debian';  Label = 'Debian 12 i386 - desktop (recommended)';  Hint = 'auto-download + SHA256 check; security support to 2028' }
+        @{ Key = 'kodi';    Label = 'Debian 12 i386 - Kodi media center';      Hint = 'same stick; boots straight into Kodi after one script' }
+        @{ Key = 'android'; Label = 'Android-x86 9.0 (32-bit) - experimental'; Hint = 'boots; touch/Wi-Fi/sound unverified on the Stream 7' }
+        @{ Key = 'custom';  Label = 'My own ISO';                              Hint = 'must contain EFI\BOOT\BOOTIA32.EFI' }
     )
     if (-not $kind) { return }
-    $iso = if ($kind -eq 'debian') { Get-L7VerifiedDebianIso -DownloadDir $Paths.Downloads }
-           else { Select-L7File -Title 'Linux ISO' -Filter 'ISO image (*.iso)|*.iso' }
+    if ($kind -eq 'android') {
+        Write-L7Section 'Android-x86 9.0 - read this first'
+        Write-L7Warn 'Android 9 (2018) gets no security updates, and a growing number of apps no longer support it.'
+        Write-L7Warn 'Nobody has confirmed touch, Wi-Fi (RTL8723BS), sound (RT5645) or rotation on a Stream 7 yet.'
+        Write-L7Info 'Try LIVE mode first: it runs from the stick and changes nothing on the tablet.'
+        Write-L7Info 'Installing to the eMMC erases Windows - back up the recovery partition first.'
+        if (-not (Read-L7YesNo 'Continue?')) { return }
+    }
+    $iso = switch ($kind) {
+        'android' { Get-L7VerifiedAndroidX86Iso -DownloadDir $Paths.Downloads }
+        'custom'  { Select-L7File -Title 'Linux / Android ISO' -Filter 'ISO image (*.iso)|*.iso' }
+        default   { Get-L7VerifiedDebianIso -DownloadDir $Paths.Downloads }
+    }
     if (-not $iso) { return }
-    Invoke-L7BuildUsb -Mode linux -SourcePath $iso -PayloadDir $Paths.Payload -DryRun:$DryRun
+    $built = Invoke-L7BuildUsb -Mode linux -SourcePath $iso -PayloadDir $Paths.Payload -DryRun:$DryRun
+    if (-not $built) { Wait-L7Key; return }
+    switch ($kind) {
+        'kodi' {
+            Write-L7Section 'Kodi media center - after Debian is installed'
+            Write-L7Info 'In the Debian installer: at "Software selection" untick the desktop, keep "standard system".'
+            Write-L7Info '  (Kodi brings its own interface; skipping a desktop saves a lot of the 1 GB RAM.)'
+            Write-L7Info 'Then on the tablet, with the stick plugged back in:'
+            Write-L7Info '  sudo sh /media/<user>/LAZARUS7/lazarus7/linux/stream7-debian-postinstall.sh --backlight'
+            Write-L7Info '  sudo sh /media/<user>/LAZARUS7/lazarus7/linux/stream7-media-center.sh'
+            Write-L7Info '  sudo reboot     -> boots straight into Kodi, in landscape'
+            Write-L7Info 'No desktop = no auto-mounting: mount the stick first with  sudo mount /dev/sda1 /mnt'
+            Write-L7Info '  and use /mnt/lazarus7/linux/... in the two commands above.'
+        }
+        'android' {
+            Write-L7Section 'Android-x86 - on the tablet'
+            Write-L7Info 'Vol- + Power -> F10: Secure Boot off.  Then Vol- + Power -> F9 -> the stick.'
+            Write-L7Info 'Menu: "Live CD - Run Android without installation". Check touch, Wi-Fi and sound.'
+            Write-L7Info 'Hangs at a black screen? Reboot, press "e" on the menu entry, add  nomodeset  to the'
+            Write-L7Info '  linux line, then Ctrl+X / F10. Still stuck? Try the "Debug mode" entry.'
+            Write-L7Info 'Please report what worked: main menu -> Report a problem / request a feature -> Tell us what worked.'
+        }
+    }
     Wait-L7Key
 }
 
@@ -190,7 +225,7 @@ while ($true) {
         @{ Key = 'firstaid'; Label = 'First aid';                          Hint = 'battery, F2/F9/F10/F11, Refresh/Reset' }
         @{ Key = 'toolkit';  Label = 'Make a tablet toolkit USB';          Hint = 'back up Windows 8.1 first - nothing erased' }
         @{ Key = 'winusb';   Label = 'Restore Windows (recovery USB)';     Hint = 'factory 8.1 or Windows 10 x86' }
-        @{ Key = 'linux';    Label = 'Deploy Linux';                       Hint = 'Debian 12 USB + tablet tweaks' }
+        @{ Key = 'linux';    Label = 'Deploy an OS';                       Hint = 'Debian desktop, Kodi media center, Android-x86' }
         @{ Key = 'detect';   Label = 'Identify a tablet over USB';         Hint = 'Android only - a Stream 7 never shows up' }
         @{ Key = 'android';  Label = 'Other HP tablets: Android Slate 7';  Hint = 'ADB, fastboot, Rockchip' }
         @{ Key = 'guide';    Label = 'Open the full guide' }

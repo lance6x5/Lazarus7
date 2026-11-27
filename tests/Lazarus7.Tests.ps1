@@ -149,6 +149,37 @@ Describe 'Feedback and official links' {
     }
 }
 
+Describe 'Other operating systems' {
+    $root = Split-Path $PSScriptRoot
+    It 'pins Android-x86 to two independent, well-formed checksums and HTTPS SourceForge mirrors' {
+        $a = Get-L7AndroidX86Release
+        $a.FileName | Should Be 'android-x86-9.0-r2.iso'
+        $a.Sha1 -match '^[0-9a-f]{40}$' | Should Be $true
+        $a.Md5 -match '^[0-9a-f]{32}$' | Should Be $true
+        foreach ($u in $a.Urls) { $u -match '^https://[a-z.]*sourceforge\.net/project/android-x86/' | Should Be $true }
+    }
+    It 'rejects a missing or wrong Android-x86 image' {
+        Test-L7AndroidX86Iso -Path (Join-Path $TestDrive 'nope.iso') | Should Be $false
+        $fake = Join-Path $TestDrive 'android-x86-9.0-r2.iso'
+        Set-Content $fake 'not really an ISO'
+        Test-L7AndroidX86Iso -Path $fake | Should Be $false
+    }
+    It 'offers Kodi and Android-x86 in the Deploy menu' {
+        $main = [IO.File]::ReadAllText((Join-Path $root 'Lazarus7.ps1'))
+        $main -match "Key = 'kodi'" | Should Be $true
+        $main -match "Key = 'android'; Label = 'Android-x86" | Should Be $true
+    }
+    It 'ships the Kodi media-center script with strict mode and validated rotation' {
+        $sh = Join-Path $root 'payload\linux\stream7-media-center.sh'
+        Test-Path $sh | Should Be $true
+        $text = [IO.File]::ReadAllText($sh)
+        $text -match '(?m)^set -eu$' | Should Be $true
+        $text -match 'normal\|left\|right\|inverted' | Should Be $true
+        $text -match 'kodi-standalone' | Should Be $true
+        @([IO.File]::ReadAllBytes($sh) | Where-Object { $_ -gt 127 }).Count | Should Be 0
+    }
+}
+
 Describe 'Tablet payload' {
     $payload = Join-Path (Split-Path $PSScriptRoot) 'payload'
     It 'ships the Windows helper and the Linux post-install script' {

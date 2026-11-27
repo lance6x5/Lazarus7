@@ -4,7 +4,7 @@
 # Console UI: banner, menus, prompts, file pickers. Plain ASCII on purpose so it
 # renders correctly in the stock Windows PowerShell 5.1 console.
 
-$script:Lazarus7Version = '1.6.0'
+$script:Lazarus7Version = '1.7.0'
 
 # figlet "standard"-style glyphs, rendered by Show-Lazarus7Banner so that the
 # columns always line up.

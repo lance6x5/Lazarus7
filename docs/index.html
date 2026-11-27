@@ -127,7 +127,7 @@
 
 <nav><div class="wrap">
   <span class="brand">LAZARUS7</span>
-  <a class="ver" id="navVer" href="#changelog">v1.6.0</a>
+  <a class="ver" id="navVer" href="#changelog">v1.7.0</a>
   <a href="#launch">Launch</a>
   <a href="#diagnose">Diagnose</a>
   <a href="#identify">Android scan</a>
@@ -141,11 +141,11 @@
 <header><div class="wrap">
   <img src="logo.svg" alt="Lazarus7 - Raise your 7-inch HP tablet from the dead.">
   <p class="lead">Built for the <b>HP Stream 7</b> (label <code>TSW 7H</code>) that shipped with
-    <b>Windows 8.1 with Bing</b>. Back up its WIMBoot Windows, restore factory 8.1, or give it a second life on Debian.
+    <b>Windows 8.1 with Bing</b>. Back up its WIMBoot Windows, restore factory 8.1, or give it a second life as a Debian tablet, a Kodi media center, or (experimentally) Android.
     Diagnose right here in your browser, then launch the full tool with one line.</p>
   <!-- Static values are the fallback; the script below refreshes them from the GitHub API. -->
-  <div class="relinfo" id="relinfo" data-version="1.6.0">
-    <a class="chip" id="chipVer" href="https://github.com/lance6x5/Lazarus7/releases/latest">Latest release <b>v1.6.0</b></a>
+  <div class="relinfo" id="relinfo" data-version="1.7.0">
+    <a class="chip" id="chipVer" href="https://github.com/lance6x5/Lazarus7/releases/latest">Latest release <b>v1.7.0</b></a>
     <span class="chip" id="chipRel">Released <b>2026-11-27</b></span>
     <a class="chip" id="chipSite" href="https://github.com/lance6x5/Lazarus7/commits/main/docs">Site updated <b>-</b></a>
   </div>
@@ -239,13 +239,15 @@
   <table>
     <tr><th>OS</th><th>Verdict</th><th>Notes</th></tr>
     <tr><td>Windows 8.1 with Bing (stock)</td><td class="m">Restore only</td><td>HP recovery media brings back the factory WIMBoot image with all drivers. Out of support since Jan 2023: fine offline, risky online.</td></tr>
-    <tr><td><b>Debian 12 i386</b></td><td class="y">Recommended</td><td>Lazarus7's default. Download is SHA256-verified, with tablet fixes applied after install. Security support to mid-2028.</td></tr>
+    <tr><td><b>Debian 12 i386</b> (desktop)</td><td class="y">Recommended</td><td>Lazarus7's default. Download is SHA256-verified, with tablet fixes applied after install. Security support to mid-2028.</td></tr>
+    <tr><td><b>Debian 12 + Kodi</b> (media center)</td><td class="y">Best media option</td><td>Boots straight into Kodi 20, in landscape with working touch. VA-API hardware decode for H.264, MPEG-2 and VC-1 (no HEVC/VP9 hardware on this chip). One script after install.</td></tr>
     <tr><td>Debian 13 amd64</td><td class="x">Not out of the box</td><td>No i386 installer, and the amd64 netinst has only BOOTX64.EFI.</td></tr>
     <tr><td>Lubuntu / Xubuntu</td><td class="m">With surgery</td><td>Add GRUB ia32 by hand.</td></tr>
     <tr><td>Alpine / Arch</td><td class="m">DIY</td><td><code>grub-install --target=i386-efi</code>. Light on 1 GB RAM.</td></tr>
-    <tr><td>Android-x86 / Bliss OS</td><td class="m">Experimental</td><td>Needs ia32 GRUB. Touch and rotation are hit-and-miss.</td></tr>
+    <tr><td>Android-x86 9.0-r2 (32-bit)</td><td class="m">Experimental</td><td>Its ISO has <code>bootia32.efi</code> (checked), so it boots. Lazarus7 verifies the download with two published checksums. Touch, Wi-Fi and sound are unconfirmed on a Stream 7, so try Live mode first. Android 9 gets no security updates.</td></tr>
+    <tr><td>LibreELEC, Bliss OS, PrimeOS</td><td class="x">No</td><td>LibreELEC has no official 32-bit-UEFI support. Bliss OS and PrimeOS are 64-bit, and same-class Z3735F tablets report boot freezes. For Kodi, use Debian + Kodi.</td></tr>
     <tr><td>Windows 10 x86</td><td class="m">Works, unsupported</td><td>Out of support since Oct 2025. May not activate with the 8.1 firmware key: Microsoft stopped honoring 8.x keys in 2023. Needs HP's 5701 drivers. Slow on 1 GB RAM.</td></tr>
-    <tr><td>Windows 11, ChromeOS Flex, Fedora</td><td class="x">No</td><td>No 32-bit UEFI support.</td></tr>
+    <tr><td>Windows 11, ChromeOS Flex, Fedora, Batocera</td><td class="x">No</td><td>No 32-bit UEFI support.</td></tr>
   </table>
   </div>
   <p class="note">Full manual walkthrough: <a href="https://github.com/lance6x5/Lazarus7/blob/main/docs/GUIDE.md">the field guide</a>.</p>

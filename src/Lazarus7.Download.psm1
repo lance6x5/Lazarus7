@@ -72,10 +72,12 @@ function Test-L7FileHash {
   renames, so an interrupted download never looks complete.
 #>
 function Save-L7Download {
-    param([Parameter(Mandatory)][string]$Url, [Parameter(Mandatory)][string]$Destination)
+    param([Parameter(Mandatory)][string]$Url, [Parameter(Mandatory)][string]$Destination, [string]$UserAgent)
     Add-Type -AssemblyName System.Net.Http
     $client = New-Object System.Net.Http.HttpClient
     $client.Timeout = [TimeSpan]::FromHours(2)
+    # SourceForge serves a browser landing page instead of the file unless the client looks like a download tool.
+    if ($UserAgent) { $client.DefaultRequestHeaders.UserAgent.ParseAdd($UserAgent) }
     $part = "$Destination.part"
     try {
         $resp = $client.GetAsync($Url, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead).Result
@@ -131,6 +133,48 @@ function Get-L7VerifiedDebianIso {
 }
 
 <#
+  Android-x86 9.0-r2 (32-bit) - the last Android-x86 release, and its ISO ships
+  EFI/BOOT/bootia32.efi, so the Stream 7 can boot it. Checked against two
+  independent published hashes: SHA-1 from android-x86.org's release note and
+  MD5 from SourceForge's file listing. Both must match.
+#>
+$script:AndroidX86 = [pscustomobject]@{
+    Name      = 'Android-x86 9.0-r2 (32-bit)'
+    FileName  = 'android-x86-9.0-r2.iso'
+    Urls      = @('https://master.dl.sourceforge.net/project/android-x86/Release%209.0/android-x86-9.0-r2.iso?viasf=1',
+                  'https://downloads.sourceforge.net/project/android-x86/Release%209.0/android-x86-9.0-r2.iso')
+    Sha1      = 'd72bbd11c1bedbe99f50da54731c6a83b41becb0'   # https://www.android-x86.org/releases/releasenote-9-0-r2.html
+    Md5       = 'a58dd3e12385f368edee978f8ce20a03'           # SourceForge file listing
+    UserAgent = 'Wget/1.21.4 (Lazarus7)'
+}
+
+function Get-L7AndroidX86Release { $script:AndroidX86 }
+
+function Test-L7AndroidX86Iso {
+    param([Parameter(Mandatory)][string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return $false }
+    ((Get-FileHash -Algorithm SHA1 -LiteralPath $Path).Hash -ieq $script:AndroidX86.Sha1) -and
+    ((Get-FileHash -Algorithm MD5 -LiteralPath $Path).Hash -ieq $script:AndroidX86.Md5)
+}
+
+function Get-L7VerifiedAndroidX86Iso {
+    param([Parameter(Mandatory)][string]$DownloadDir)
+    $rel = $script:AndroidX86
+    $null = New-Item -ItemType Directory -Force $DownloadDir
+    $dest = Join-Path $DownloadDir $rel.FileName
+    if (Test-L7AndroidX86Iso $dest) { Write-L7Ok "$($rel.Name) already downloaded and verified."; return $dest }
+    foreach ($u in $rel.Urls) {
+        Write-L7Step "Downloading $($rel.Name) (~900 MB) from SourceForge..."
+        try { Save-L7Download -Url $u -Destination $dest -UserAgent $rel.UserAgent } catch { Write-L7Warn "Mirror failed: $($_.Exception.Message)"; continue }
+        Write-L7Step 'Verifying SHA-1 (android-x86.org) and MD5 (SourceForge)...'
+        if (Test-L7AndroidX86Iso $dest) { Write-L7Ok 'Both checksums match.'; return $dest }
+        Remove-Item -Force $dest
+        Write-L7Warn 'Checksum mismatch - deleted. Trying the next mirror.'
+    }
+    throw "Could not get a verified $($rel.FileName). Download it yourself and use 'My own ISO'."
+}
+
+<#
   Returns the folder containing adb.exe/fastboot.exe. Uses PATH if available,
   otherwise downloads Google's platform-tools and checks the signature.
 #>
@@ -162,4 +206,5 @@ function Get-L7PlatformTools {
 }
 
 Export-ModuleMember -Function Find-L7NetinstChecksum, Select-L7LatestPointRelease, Get-L7DebianRelease,
-    Test-L7FileHash, Save-L7Download, Get-L7VerifiedDebianIso, Get-L7PlatformTools
+    Test-L7FileHash, Save-L7Download, Get-L7VerifiedDebianIso, Get-L7PlatformTools,
+    Get-L7AndroidX86Release, Test-L7AndroidX86Iso, Get-L7VerifiedAndroidX86Iso

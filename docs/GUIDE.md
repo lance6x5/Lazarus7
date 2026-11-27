@@ -211,19 +211,23 @@ fits in 32 GB.
 
 ---
 
-## 5. Give it a second life: Linux
+## 5. Give it a second life: other operating systems
 
 The 32-bit UEFI is the main constraint: the boot medium needs `BOOTIA32.EFI`, which most mainstream ISOs lack.
-Disable **Secure Boot** in F10 first.
+Disable **Secure Boot** in F10 first. Every entry below was checked against the actual image or package archive,
+not just forum posts.
 
 | OS | Verdict | Notes |
 |---|---|---|
-| **Debian 12 i386** | ✅ Recommended (Lazarus7 default) | The Debian wiki has a Stream 7 page. WiFi, touch, audio and display work. Suspend and backlight need the post-install fix. Security support (LTS) runs to mid-2028. |
+| **Debian 12 i386** (desktop) | ✅ Recommended (Lazarus7 default) | The Debian wiki has a Stream 7 page. WiFi, touch, audio and display work. Suspend and backlight need the post-install fix. Security support (LTS) runs to mid-2028. |
+| **Debian 12 i386 + Kodi** (media center) | ✅ Best media option | Kodi 20.1, `i965-va-driver` (Bay Trail VA-API) and lightdm are all in Debian 12 i386. Lazarus7's script boots straight into Kodi in landscape. See 5b. |
+| **Android-x86 9.0-r2, 32-bit** | ⚠️ Experimental | The ISO ships `EFI/BOOT/bootia32.efi` (checked), so it boots. Touch, Wi-Fi, sound and rotation are unconfirmed on a Stream 7. Android 9 gets no security updates. See 5c. |
+| LibreELEC (Kodi OS) | ❌ | No official 32-bit-UEFI support; only a 2016 community build. Use Debian + Kodi instead. |
+| Bliss OS / PrimeOS | ❌ | 64-bit Android builds. A 2026 report on a same-class Z3735F tablet shows boot freezes and dead touch. |
 | Debian 13 amd64 | ❌ Not out of the box | Debian 13 dropped i386 installers, and the amd64 netinst has only `BOOTX64.EFI` (checked on 13.8). |
 | Lubuntu / Xubuntu | ⚠️ Works with surgery | The ISO has no `bootia32.efi`; add GRUB ia32 by hand. The installer often forgets `/boot/efi/EFI/ubuntu/grubia32.efi`. |
 | Alpine / Arch (with `grub --target=i386-efi`) | ⚠️ DIY | Fine if you're comfortable with a manual install. Light on 1 GB of RAM. |
-| Android-x86 / Bliss OS | ⚠️ Experimental | Needs an ia32 GRUB. Touch and rotation are hit-and-miss. |
-| ChromeOS Flex, Fedora, Windows 11 | ❌ | No 32-bit UEFI support. |
+| ChromeOS Flex, Fedora, Windows 11, Batocera | ❌ | No 32-bit UEFI support. |
 
 **Desktop choice for 1 GB RAM:** Xfce or LXQt plus the `onboard` on-screen keyboard is much snappier than GNOME.
 The post-install script enables **zram**, which helps a lot.
@@ -234,7 +238,7 @@ OctoPrint display for a 3D printer, an e-reader (Foliate/KOReader), a digital ph
 ### Debian install, step by step
 1. **Back up Windows 8.1 first (section 3).** Debian's "use entire disk" deletes the WIMBoot recovery partition, which
    *is* Windows 8.1.
-2. Launch `Lazarus7.cmd` → **Deploy Linux** → **Debian 12 i386**. It downloads the latest 12.x netinst from
+2. Launch `Lazarus7.cmd` → **Deploy an OS** → **Debian 12 i386 - desktop**. It downloads the latest 12.x netinst from
    cdimage.debian.org, verifies the SHA256, checks for `BOOTIA32.EFI`, writes the stick, and adds the tablet helpers
    under `\lazarus7\`.
 3. Tablet: Vol-Down + Power → **F10** → System Configuration > Boot Options → **Secure Boot: Disabled** → F10 to save.
@@ -245,6 +249,51 @@ OctoPrint display for a 3D printer, an e-reader (Foliate/KOReader), a digital ph
    ```
    This installs firmware, zram, the rotation sensor and the OSK. It also installs GRUB to the removable fallback path,
    so a lost NVRAM entry can't "brick" it again, and applies the backlight/suspend fix.
+
+### 5b. Media center: Debian 12 + Kodi
+Turns the Stream 7 into a small Kodi box that boots straight into Kodi, in landscape, with touch working.
+1. `Lazarus7.cmd` → **Deploy an OS** → **Debian 12 i386 - Kodi media center** (the same verified Debian stick).
+2. Install Debian as in 5 (back up Windows first). At **Software selection**, *untick* the desktop and keep
+   **standard system utilities**. Kodi brings its own interface, and skipping a desktop saves a lot of the 1 GB RAM.
+3. Log in on the text console, mount the stick (there's no desktop to do it for you) and run both scripts:
+   ```bash
+   sudo mount /dev/sda1 /mnt
+   sudo sh /mnt/lazarus7/linux/stream7-debian-postinstall.sh --backlight
+   sudo sh /mnt/lazarus7/linux/stream7-media-center.sh
+   sudo reboot
+   ```
+4. It boots into Kodi. The script:
+   - installs Kodi 20 and `inputstream-adaptive`;
+   - installs `i965-va-driver`, so H.264, MPEG-2 and VC-1 decode in hardware;
+   - sets up lightdm auto-login into a **Lazarus7 Kodi** session, which rotates the portrait 800×1280 panel to
+     landscape and maps the Goodix touchscreen to match.
+
+Options: `--rotate left` (picture upside down), `--no-autologin` (choose the Kodi session at the login screen),
+`--user NAME`. To undo auto-login: `sudo rm /etc/lightdm/lightdm.conf.d/50-lazarus7-kodi.conf`.
+
+**Expectations:** 720p–1080p **H.264** plays smoothly with hardware decoding (check with `vainfo`). **HEVC/H.265 and
+VP9** have no hardware support on this chip, so they will stutter: pick H.264 versions, or let your media server
+transcode. Kodi works as a client for Jellyfin, Plex and DLNA/SMB shares, and for IPTV through add-ons. Sound is the
+single mono speaker, or the headphone jack. Use Bluetooth or the jack for anything better.
+
+### 5c. Android: Android-x86 9.0 (32-bit), experimental
+Android-x86 9.0-r2 is the last Android-x86 release, and its 32-bit ISO carries a 32-bit EFI loader, so the Stream 7 can
+boot it. **Nobody has confirmed touch, Wi-Fi (RTL8723BS), sound (RT5645) or rotation on a Stream 7 yet.** Android 9
+(2018) gets no security updates, and a growing number of apps no longer support it.
+1. `Lazarus7.cmd` → **Deploy an OS** → **Android-x86 9.0 (32-bit)**. It downloads `android-x86-9.0-r2.iso` from
+   SourceForge and checks it against **two independent checksums**: SHA-1 from android-x86.org's release note and MD5
+   from SourceForge. It deletes the file if either fails, then writes the stick.
+2. Tablet: F10 → Secure Boot off, then F9 → the stick → **"Live CD - Run Android without installation"**. Live mode
+   changes nothing on the tablet, so check touch, Wi-Fi and sound there first.
+3. Black screen or hang? Reboot, highlight the entry, press **e**, add `nomodeset` to the `linux` line, and boot with
+   **Ctrl+X** (or F10). The **Debug mode** entry shows where it stops.
+4. Only if live mode works well, use **Installation** from the same menu. It erases Windows, so back up the recovery
+   partition first (section 3).
+5. Please report what worked (Lazarus7 → **Report a problem / request a feature** → *Tell us what worked*). That's how
+   this entry gets upgraded from "experimental".
+
+For Kodi under Android, install Kodi's Android build inside Android-x86. On this hardware, though, 5b is the more
+dependable media setup.
 
 ---
 
@@ -281,6 +330,12 @@ Leave APX by holding Power 10+ s. A factory reset may trigger the Google account
 ---
 
 ## Sources
+- Android-x86 9.0-r2 release note (SHA-1 checksums): <https://www.android-x86.org/releases/releasenote-9-0-r2.html>
+- Android-x86 release files (SourceForge): <https://sourceforge.net/projects/android-x86/files/Release%209.0/>
+- Debian package archive (kodi, i965-va-driver, lightdm for bookworm i386): <https://packages.debian.org/bookworm/kodi>
+- LibreELEC forum, 32-bit UEFI support: <https://forum.libreelec.tv/thread/6602-32bit-efi-uefi-support-for-le/>
+- CNX Software, 2016 LibreELEC community build for 32-bit UEFI: <https://www.cnx-software.com/2016/09/19/libreelec-8-for-intel-atom-bay-trail-and-cherry-trail-devices-with-32-bit-uefi-binary/>
+- XDA, Z3735F tablet with Bliss OS / Android-x86 (boot freeze, touch): <https://xdaforums.com/t/sqool-tablet-intel-atom-z3735f-2gb-ram-silead-gsl1680-bcm43340-need-compatible-rom-android-x86-blissos-linux.4780720/>
 - Hans de Goede, unbricking Bay/Cherry Trail tablets (DnX and the missing device-mode PHY): <https://hansdegoede.livejournal.com/25342.html>
 - HP Stream 7 maintenance and service manual: <https://www.manualslib.com/manual/2199305/Hp-Stream-7.html>
 - HP Cloud Recovery Tool supported platforms: <https://ftp.hp.com/pub/caps-softpaq/CloudRecovery/crsupportedplatform.html>

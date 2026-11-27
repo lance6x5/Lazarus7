@@ -365,6 +365,8 @@ function Invoke-L7BuildUsb {
             Write-L7Info '5. Touch does not work inside Windows Setup - use the keyboard (and a mouse).'
             Write-L7Info '6. After Windows is up: run \lazarus7\windows\Stream7-Check.cmd -> option 3 to install \Drivers.'
         }
+        # Callers show follow-up steps only when a stick was really built (or walked through in a dry run).
+        return $true
     } finally {
         Close-L7Source $src
     }
